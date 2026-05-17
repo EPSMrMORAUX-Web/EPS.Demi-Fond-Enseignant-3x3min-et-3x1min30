@@ -1,0 +1,1765 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>EPS Demi-Fond</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --neon:#00f5a0;--neon2:#00c97c;--ora:#ff8c42;--red:#ff3366;--vi:#a78bfa;
+  --bg:#080d12;--card:#0f1923;--panel:#162030;--brd:#1e3048;
+  --mt:#4a6a8a;--base:#8aaccc;--br:#c8e0f4;
+  --w1:#38bdf8;--w2:#34d399;--w3:#f59e0b;--w4:#a78bfa;
+  --mono:'Share Tech Mono',monospace;
+  --disp:'Barlow Condensed',sans-serif;
+  --body:'Barlow',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--base);font-family:var(--body);min-height:100vh;overflow-x:hidden}
+
+/* HEADER */
+.hdr{background:linear-gradient(90deg,#060b10,#0f1923 50%,#060b10);border-bottom:1px solid var(--brd);padding:9px 14px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100}
+.hdr-logo{width:30px;height:30px;background:var(--neon);border-radius:4px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:14px;color:#000;font-weight:bold;box-shadow:0 0 12px rgba(0,245,160,.4);flex-shrink:0}
+.hdr-title{font-family:var(--disp);font-size:18px;font-weight:900;letter-spacing:2px;color:var(--br);text-transform:uppercase}
+.hdr-sub{font-family:var(--mono);font-size:9px;color:var(--neon2);letter-spacing:1px}
+.hdr-export{margin-left:auto;display:flex;gap:6px}
+.exp-btn{font-family:var(--disp);font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:5px 10px;border-radius:4px;border:1px solid var(--brd);background:var(--panel);color:var(--base);cursor:pointer;transition:all .2s;white-space:nowrap}
+.exp-btn:hover{border-color:var(--neon);color:var(--neon)}
+.exp-btn.xl{border-color:rgba(52,211,153,.3);color:#34d399}
+.exp-btn.xl:hover{background:rgba(52,211,153,.1);border-color:#34d399}
+.exp-btn.pdf{border-color:rgba(248,113,113,.3);color:#f87171}
+.exp-btn.pdf:hover{background:rgba(248,113,113,.1);border-color:#f87171}
+
+/* TABS */
+nav{display:flex;background:var(--card);border-bottom:1px solid var(--brd);overflow-x:auto;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+.tab{font-family:var(--disp);font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:11px 16px;border:none;background:transparent;color:var(--mt);cursor:pointer;white-space:nowrap;border-bottom:3px solid transparent;transition:all .2s;flex-shrink:0}
+.tab:hover{color:var(--br);background:rgba(255,255,255,.02)}
+.tab.on{color:var(--neon);border-bottom-color:var(--neon);background:rgba(0,245,160,.04)}
+.tab-n{font-family:var(--mono);font-size:8px;display:block;margin-bottom:1px;opacity:.6}
+.panel{display:none}.panel.on{display:block}
+
+/* CHRONO BAR */
+.cbar{background:var(--card);border-bottom:1px solid var(--brd);padding:8px 12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;position:sticky;top:48px;z-index:90}
+.ctime{font-family:var(--mono);font-size:32px;color:var(--neon);text-shadow:0 0 16px rgba(0,245,160,.3);min-width:64px;transition:color .2s;line-height:1}
+.ctime.w{color:var(--ora);text-shadow:0 0 16px rgba(255,140,66,.4)}
+.ctime.d{color:var(--red);animation:blink .5s infinite}
+.ctime.r{color:var(--ora)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.cinfo{flex:1}
+.cphase{font-family:var(--disp);font-size:12px;font-weight:700;letter-spacing:1px;color:var(--mt);text-transform:uppercase}
+.cphase.a{color:var(--neon)}.cphase.r{color:var(--ora)}
+.cblks{display:flex;gap:3px;margin-top:3px}
+.cblk{width:24px;height:3px;border-radius:2px;background:var(--brd);transition:all .3s}
+.cblk.d{background:var(--neon);box-shadow:0 0 5px rgba(0,245,160,.5)}
+.cblk.a{background:var(--ora);animation:pb 1s infinite}
+@keyframes pb{0%,100%{opacity:1}50%{opacity:.4}}
+.cbtn{font-family:var(--disp);font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:7px 13px;border-radius:5px;border:none;cursor:pointer;transition:all .2s;white-space:nowrap}
+.cbtn.go{background:var(--neon);color:#000}
+.cbtn.go:hover{background:#00ffaa}
+.cbtn.go:disabled{background:var(--brd);color:var(--mt);cursor:not-allowed}
+.cbtn.pause{background:transparent;color:var(--base);border:1px solid var(--brd)}
+.cbtn.pause:hover:not(:disabled){border-color:var(--base);color:var(--br)}
+.cbtn.pause:disabled{opacity:.4;cursor:not-allowed}
+.cbtn.stop{background:transparent;color:var(--red);border:1px solid rgba(255,51,102,.3)}
+.cbtn.stop:hover:not(:disabled){background:rgba(255,51,102,.1)}
+.cbtn.stop:disabled{opacity:.4;cursor:not-allowed}
+.rest-info{font-family:var(--mono);font-size:10px;color:var(--mt);letter-spacing:.5px}
+.tgl-row{display:flex;align-items:center;gap:5px;margin-left:auto}
+.tgl-lbl{font-family:var(--mono);font-size:9px;color:var(--mt);letter-spacing:.5px}
+.tgl{width:32px;height:18px;background:var(--brd);border-radius:9px;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
+.tgl.on{background:rgba(255,140,66,.4)}
+.tgl::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:var(--mt);transition:transform .2s,background .2s}
+.tgl.on::after{transform:translateX(14px);background:var(--ora)}
+
+/* STUDENT BAR */
+.sbar{padding:8px 12px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--brd);background:rgba(0,0,0,.2)}
+.sinp{flex:1;min-width:110px;background:var(--panel);border:1px solid var(--brd);color:var(--br);border-radius:5px;padding:7px 10px;font-family:var(--body);font-size:13px;outline:none;transition:border-color .2s}
+.sinp:focus{border-color:var(--neon)}
+.sinp::placeholder{color:var(--mt)}
+.sbtn{font-family:var(--disp);font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:7px 12px;border-radius:5px;border:1px solid var(--brd);background:var(--panel);color:var(--base);cursor:pointer;white-space:nowrap;transition:all .2s}
+.sbtn:hover{border-color:var(--neon);color:var(--neon)}
+.sbtn.pr{background:var(--neon);color:#000;border-color:var(--neon)}
+.sbtn.pr:hover{background:#00ffaa}
+.cnt{font-family:var(--mono);font-size:10px;color:var(--neon2);background:rgba(0,245,160,.08);border:1px solid rgba(0,245,160,.2);padding:4px 9px;border-radius:3px;letter-spacing:.5px;flex-shrink:0}
+
+/* WAVE FILTER */
+.wfilter{padding:6px 12px;display:flex;gap:5px;align-items:center;border-bottom:1px solid var(--brd);overflow-x:auto;scrollbar-width:none;flex-wrap:nowrap}
+.wfilter::-webkit-scrollbar{display:none}
+.wf-lbl{font-family:var(--mono);font-size:9px;color:var(--mt);letter-spacing:.5px;flex-shrink:0}
+.wf-btn{font-family:var(--disp);font-size:12px;font-weight:700;padding:4px 11px;border-radius:4px;border:1px solid var(--brd);background:var(--panel);color:var(--mt);cursor:pointer;transition:all .2s;flex-shrink:0;white-space:nowrap}
+.wf-btn:hover{border-color:var(--base);color:var(--br)}
+.wf-btn.on{color:#000;border-color:transparent}
+.wf-btn[data-w="all"].on{background:var(--neon);border-color:var(--neon)}
+.wf-btn[data-w="1"].on{background:var(--w1)}
+.wf-btn[data-w="2"].on{background:var(--w2)}
+.wf-btn[data-w="3"].on{background:var(--w3)}
+.wf-btn[data-w="4"].on{background:var(--w4)}
+
+/* PROGRESS */
+.prog{display:none;padding:5px 12px;font-family:var(--mono);font-size:10px;color:var(--mt);letter-spacing:.5px;background:rgba(0,0,0,.2);border-bottom:1px solid var(--brd)}
+.prog.show{display:flex;align-items:center;gap:8px}
+.prog-bar{flex:1;height:2px;background:var(--brd);border-radius:1px;overflow:hidden}
+.prog-fill{height:100%;background:var(--neon);border-radius:1px;transition:width .4s}
+
+/* STUDENT GRID */
+.grid{padding:10px 12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:9px}
+
+/* STUDENT CARD */
+.sc{background:var(--card);border:1px solid var(--brd);border-radius:9px;overflow:hidden;transition:border-color .2s;position:relative}
+.sc.absent{opacity:.5}
+.sc.dispense{opacity:.45}
+.sc-status-overlay{display:none;position:absolute;inset:0;align-items:center;justify-content:center;font-family:var(--disp);font-size:28px;font-weight:900;letter-spacing:3px;pointer-events:none;z-index:5;background:rgba(8,13,18,.5)}
+.sc.absent .sc-status-overlay,.sc.dispense .sc-status-overlay{display:flex}
+.sc.absent .sc-status-overlay{color:rgba(255,51,102,.8)}
+.sc.dispense .sc-status-overlay{color:rgba(74,106,138,.8)}
+/* Block interactions when absent/dispensed */
+.sc.absent .sc-body,.sc.dispense .sc-body{pointer-events:none}
+/* But still allow status toggle */
+.sc-head{padding:9px 12px;display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid var(--brd)}
+.sc-name{font-family:var(--disp);font-size:15px;font-weight:700;color:var(--br);letter-spacing:.5px}
+.sc-meta{display:flex;gap:5px;align-items:center;margin-top:2px;flex-wrap:wrap}
+.sc-class{font-family:var(--mono);font-size:9px;color:var(--mt);letter-spacing:.5px}
+.sx{font-family:var(--mono);font-size:9px;padding:1px 5px;border-radius:2px;letter-spacing:.5px}
+.sx.G{background:rgba(56,189,248,.12);color:#38bdf8;border:1px solid rgba(56,189,248,.2)}
+.sx.F{background:rgba(244,114,182,.12);color:#f472b6;border:1px solid rgba(244,114,182,.2)}
+.wbadge{font-family:var(--mono);font-size:9px;padding:1px 6px;border-radius:2px;letter-spacing:.5px;font-weight:700}
+.wbadge[data-w="1"]{background:rgba(56,189,248,.15);color:var(--w1);border:1px solid rgba(56,189,248,.3)}
+.wbadge[data-w="2"]{background:rgba(52,211,153,.15);color:var(--w2);border:1px solid rgba(52,211,153,.3)}
+.wbadge[data-w="3"]{background:rgba(245,158,11,.15);color:var(--w3);border:1px solid rgba(245,158,11,.3)}
+.wbadge[data-w="4"]{background:rgba(167,139,250,.15);color:var(--w4);border:1px solid rgba(167,139,250,.3)}
+.sc-acts{display:flex;gap:4px;align-items:center;flex-shrink:0}
+.ico-btn{background:none;border:none;cursor:pointer;font-size:14px;padding:2px 5px;border-radius:3px;transition:all .2s;line-height:1}
+.ico-btn.del:hover{color:var(--red)}
+.ico-btn.status-btn:hover{transform:scale(1.1)}
+
+/* PLOT ROW */
+.sc-plot{padding:7px 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--brd);background:rgba(0,0,0,.2)}
+.plot-lbl{font-family:var(--mono);font-size:9px;color:var(--mt);letter-spacing:.5px;flex-shrink:0}
+.plot-ctrl{display:flex;align-items:center;gap:3px}
+.p-btn{width:26px;height:26px;background:var(--panel);border:1px solid var(--brd);color:var(--br);border-radius:4px;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+.p-btn:hover{border-color:var(--neon);color:var(--neon)}
+.p-val{font-family:var(--mono);font-size:17px;color:var(--neon);min-width:40px;text-align:center}
+.p-unit{font-family:var(--mono);font-size:9px;color:var(--mt)}
+.dist-info{margin-left:auto;font-family:var(--mono);font-size:9px;color:var(--mt);text-align:right;line-height:1.4}
+
+/* COURSES */
+.sc-courses{padding:7px 12px;display:flex;flex-direction:column;gap:4px;border-bottom:1px solid var(--brd)}
+.cr{display:flex;align-items:center;gap:6px}
+.cr-lbl{font-family:var(--mono);font-size:9px;color:var(--mt);width:18px;flex-shrink:0}
+.cr-plot{font-family:var(--mono);font-size:10px;color:var(--mt);width:38px;flex-shrink:0}
+.zb{flex:1;height:32px;border-radius:5px;border:none;cursor:pointer;font-family:var(--disp);font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;transition:all .15s;display:flex;align-items:center;justify-content:center}
+.zb.empty{background:var(--panel);border:1px dashed var(--brd);color:var(--mt);font-size:11px}
+.zb.empty:hover{border-color:var(--neon);color:var(--neon)}
+.cr-pts{font-family:var(--mono);font-size:10px;width:28px;text-align:right;flex-shrink:0}
+
+/* AFL */
+.sc-afl{padding:7px 12px;border-bottom:1px solid var(--brd);display:flex;flex-direction:column;gap:5px}
+.afl-row{display:flex;align-items:center;gap:6px}
+.afl-lbl{font-family:var(--mono);font-size:9px;color:var(--mt);letter-spacing:.5px;width:36px;flex-shrink:0}
+.afl-btns{display:flex;gap:3px;flex:1}
+.afl-d{flex:1;height:28px;border-radius:4px;border:1px solid var(--brd);background:var(--panel);color:var(--mt);font-family:var(--disp);font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;gap:1px}
+.afl-d:hover{border-color:var(--base);color:var(--br)}
+.afl-d.on{border-color:var(--vi);background:rgba(167,139,250,.15);color:var(--vi)}
+.afl-d .afl-deg{font-size:13px}
+.afl-score{font-family:var(--mono);font-size:10px;width:36px;text-align:right;flex-shrink:0;color:var(--vi)}
+
+/* SCORE ROW */
+.sc-score{padding:8px 12px;background:rgba(0,0,0,.3);display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.sc-item{flex:1;text-align:center;min-width:50px}
+.sv{font-family:var(--mono);font-size:15px;line-height:1}
+.sv.p{color:var(--neon)}.sv.m{color:#818cf8}.sv.a{color:var(--vi)}.sv.t{color:var(--br);font-size:19px}
+.sl{font-family:var(--mono);font-size:8px;color:var(--mt);letter-spacing:.5px;margin-top:1px}
+.sc-sep{width:1px;height:32px;background:var(--brd);flex-shrink:0}
+.tot-box{background:rgba(0,245,160,.08);border:1px solid rgba(0,245,160,.2);border-radius:4px;padding:4px 10px;text-align:center}
+
+/* EMPTY */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center;grid-column:1/-1}
+.es-icon{font-size:40px;margin-bottom:10px;opacity:.4}
+.es-t{font-family:var(--disp);font-size:16px;font-weight:700;color:var(--mt);letter-spacing:1px;margin-bottom:4px}
+.es-s{font-size:12px;color:var(--mt);line-height:1.6}
+
+/* OVERLAY / BOTTOM SHEET */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:none;align-items:flex-end;justify-content:center}
+.overlay.vis{display:flex}
+.sheet{background:var(--card);border-radius:14px 14px 0 0;border-top:1px solid var(--brd);width:100%;max-width:500px;max-height:92vh;overflow-y:auto;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1)}
+.overlay.vis .sheet{transform:translateY(0)}
+.sh-handle{width:32px;height:3px;background:var(--brd);border-radius:2px;margin:10px auto 6px}
+.sh-title{font-family:var(--disp);font-size:17px;font-weight:700;color:var(--br);text-align:center;letter-spacing:1px;padding:0 16px 3px}
+.sh-sub{font-family:var(--mono);font-size:10px;color:var(--mt);text-align:center;letter-spacing:1px;padding-bottom:10px}
+.sh-div{height:1px;background:var(--brd);margin:0 16px}
+
+/* ZONE PICKER SHEET */
+.zp-wrap{padding:14px}
+.zp-plot-row{display:flex;align-items:center;justify-content:space-between;background:rgba(0,0,0,.3);border-radius:7px;padding:9px 12px;margin-bottom:12px;border:1px solid var(--brd)}
+.zp-lbl{font-family:var(--mono);font-size:10px;color:var(--mt);letter-spacing:.5px}
+.zp-ctrl{display:flex;align-items:center;gap:7px}
+.zp-btn{width:33px;height:33px;background:var(--panel);border:1px solid var(--brd);color:var(--br);border-radius:5px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.zp-btn:hover{border-color:var(--neon);color:var(--neon)}
+.zp-v{font-family:var(--mono);font-size:22px;color:var(--neon);min-width:50px;text-align:center}
+.zones-grid{display:flex;flex-direction:column;gap:5px}
+.zrow{display:flex;gap:5px}
+.zz{flex:1;padding:11px 6px;border-radius:7px;border:2px solid transparent;cursor:pointer;text-align:center;transition:all .15s;font-family:var(--disp);font-weight:700}
+.zz:active{transform:scale(.96)}
+.zz-code{font-size:20px;display:block;margin-bottom:1px}
+.zz-name{font-size:10px;display:block;opacity:.85;margin-bottom:1px}
+.zz-pts{font-family:var(--mono);font-size:11px;display:block;opacity:.7}
+.zz.sel{transform:scale(1.04);box-shadow:0 0 0 3px rgba(255,255,255,.9)!important}
+.zB{background:rgba(29,78,216,.7);color:#93c5fd;border-color:rgba(59,130,246,.5)}.zB:hover,.zB.sel{background:rgba(29,78,216,.95);border-color:#60a5fa;color:#fff}
+.zJ{background:rgba(180,83,9,.7);color:#fcd34d;border-color:rgba(217,119,6,.5)}.zJ:hover,.zJ.sel{background:rgba(180,83,9,.95);border-color:#f59e0b;color:#fff}
+.zJm{background:rgba(133,77,14,.7);color:#fde68a;border-color:rgba(161,98,7,.4)}.zJm:hover,.zJm.sel{background:rgba(133,77,14,.95);border-color:#fbbf24;color:#fff}
+.zR{background:rgba(153,27,27,.7);color:#fca5a5;border-color:rgba(220,38,38,.5)}.zR:hover,.zR.sel{background:rgba(153,27,27,.95);border-color:#ef4444;color:#fff}
+.zRm{background:rgba(127,29,29,.7);color:#fecaca;border-color:rgba(185,28,28,.4)}.zRm:hover,.zRm.sel{background:rgba(127,29,29,.95);border-color:#dc2626;color:#fff}
+.zW{background:rgba(75,85,99,.7);color:#e5e7eb;border-color:rgba(107,114,128,.4)}.zW:hover,.zW.sel{background:rgba(75,85,99,.95);border-color:#d1d5db;color:#fff}
+.zWm{background:rgba(55,65,81,.7);color:#d1d5db;border-color:rgba(75,85,99,.4)}.zWm:hover,.zWm.sel{background:rgba(55,65,81,.95);border-color:#9ca3af;color:#fff}
+.zN{background:rgba(17,24,39,.9);color:#9ca3af;border-color:rgba(55,65,81,.6)}.zN:hover,.zN.sel{background:#111827;border-color:#6b7280;color:#d1d5db}
+.zNm{background:rgba(15,20,30,.9);color:#6b7280;border-color:rgba(31,41,55,.6)}.zNm:hover,.zNm.sel{background:#0f141e;border-color:#4b5563;color:#9ca3af}
+.sh-actions{padding:10px 14px 14px;display:flex;gap:7px}
+.sa-clear{flex:0;padding:11px 14px;border-radius:7px;border:1px solid rgba(255,51,102,.3);background:transparent;color:var(--red);font-family:var(--disp);font-size:12px;font-weight:700;letter-spacing:.5px;cursor:pointer;white-space:nowrap;transition:all .2s}
+.sa-clear:hover{background:rgba(255,51,102,.1)}
+.sa-ok{flex:1;padding:12px;border-radius:7px;border:none;background:rgba(0,245,160,.15);color:var(--neon);font-family:var(--disp);font-size:15px;font-weight:700;letter-spacing:1px;cursor:pointer;text-transform:uppercase;transition:all .2s}
+.sa-ok:hover{background:rgba(0,245,160,.25)}
+
+/* ADD STUDENT SHEET */
+.af{padding:14px;display:flex;flex-direction:column;gap:9px}
+.af-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.af-group{display:flex;flex-direction:column;gap:3px}
+.af-label{font-family:var(--mono);font-size:9px;color:var(--mt);letter-spacing:.5px}
+.af-inp{background:var(--panel);border:1px solid var(--brd);color:var(--br);border-radius:5px;padding:9px 10px;font-family:var(--body);font-size:13px;outline:none;transition:border-color .2s;width:100%}
+.af-inp:focus{border-color:var(--neon)}
+.af-inp option{background:var(--panel)}
+.wave-sel{display:flex;gap:6px}
+.ws-opt{flex:1;height:36px;border-radius:5px;border:1px solid var(--brd);background:var(--panel);color:var(--mt);font-family:var(--disp);font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center}
+.ws-opt:hover{border-color:var(--base);color:var(--br)}
+.ws-opt[data-w="1"].on{background:rgba(56,189,248,.2);border-color:var(--w1);color:var(--w1)}
+.ws-opt[data-w="2"].on{background:rgba(52,211,153,.2);border-color:var(--w2);color:var(--w2)}
+.ws-opt[data-w="3"].on{background:rgba(245,158,11,.2);border-color:var(--w3);color:var(--w3)}
+.ws-opt[data-w="4"].on{background:rgba(167,139,250,.2);border-color:var(--w4);color:var(--w4)}
+.af-add{padding:13px;border-radius:7px;border:none;background:var(--neon);color:#000;font-family:var(--disp);font-size:15px;font-weight:900;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .2s}
+.af-add:hover{background:#00ffaa}
+
+/* IMPORT */
+.dz{border:2px dashed var(--brd);border-radius:7px;padding:32px 16px;text-align:center;cursor:pointer;background:var(--card);transition:all .2s;position:relative;margin:14px}
+.dz:hover,.dz.over{border-color:var(--neon);background:rgba(0,245,160,.03)}
+.dz input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.dz-icon{font-size:36px;margin-bottom:7px}
+.dz-t{font-family:var(--disp);font-size:17px;font-weight:700;color:var(--br);margin-bottom:3px}
+.dz-s{font-size:12px;color:var(--mt)}
+.ss-row{display:flex;flex-wrap:wrap;gap:5px;padding:0 14px 8px}
+.ss-btn{font-family:var(--mono);font-size:10px;padding:4px 11px;border-radius:3px;border:1px solid var(--brd);background:var(--panel);color:var(--mt);cursor:pointer;transition:all .2s;letter-spacing:.5px}
+.ss-btn:hover,.ss-btn.on{border-color:var(--neon);color:var(--neon);background:rgba(0,245,160,.07)}
+.imp-info{padding:0 14px 8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.imp-tbl-wrap{overflow-x:auto;padding:0 14px 14px}
+.imp-tbl{width:100%;border-collapse:collapse;font-size:11px}
+.imp-tbl th{background:var(--panel);color:var(--br);font-family:var(--disp);font-weight:700;letter-spacing:.5px;padding:7px 10px;text-align:left;border-bottom:1px solid var(--brd);white-space:nowrap}
+.imp-tbl td{padding:6px 10px;border-bottom:1px solid rgba(30,48,72,.4);color:var(--base);font-family:var(--mono);font-size:10px;white-space:nowrap}
+.imp-tbl tr:hover td{background:rgba(0,245,160,.02)}
+
+/* BAREME */
+.bar-wrap{padding:14px;max-width:860px;margin:0 auto}
+.bar-section{margin-bottom:24px}
+.bar-title{font-family:var(--disp);font-size:20px;font-weight:900;letter-spacing:2px;color:var(--br);text-transform:uppercase;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.bar-sub{font-family:var(--mono);font-size:10px;color:var(--mt);letter-spacing:.5px;margin-bottom:12px}
+.btbl{width:100%;border-collapse:collapse;font-size:12px;border-radius:7px;overflow:hidden}
+.btbl th{background:var(--panel);color:var(--br);font-family:var(--disp);font-weight:700;letter-spacing:.5px;padding:9px 14px;text-align:left;border-bottom:1px solid var(--brd)}
+.btbl td{padding:7px 14px;border-bottom:1px solid rgba(30,48,72,.4);font-family:var(--mono);font-size:11px;color:var(--base)}
+.btbl tr:hover td{background:rgba(0,245,160,.02)}
+.lvl-badge{display:inline-block;font-family:var(--disp);font-size:10px;font-weight:700;letter-spacing:.5px;padding:2px 8px;border-radius:2px}
+.lvl-tbm{background:rgba(0,245,160,.12);color:var(--neon);border:1px solid rgba(0,245,160,.2)}
+.lvl-ms{background:rgba(56,189,248,.12);color:#38bdf8;border:1px solid rgba(56,189,248,.2)}
+.lvl-mfr{background:rgba(245,158,11,.12);color:var(--w3);border:1px solid rgba(245,158,11,.2)}
+.lvl-mi{background:rgba(255,51,102,.12);color:var(--red);border:1px solid rgba(255,51,102,.2)}
+.zone-pills{display:flex;flex-wrap:wrap;gap:6px}
+.zone-pill{padding:8px 14px;border-radius:6px;font-family:var(--disp);font-weight:700;font-size:13px;letter-spacing:.5px;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:90px;flex:1}
+.afl-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+.afl-card{background:var(--card);border:1px solid var(--brd);border-radius:7px;padding:12px;display:flex;flex-direction:column;gap:6px}
+.afl-card-deg{font-family:var(--mono);font-size:24px;color:var(--vi);line-height:1}
+.afl-card-pts{font-family:var(--disp);font-size:14px;font-weight:700;color:var(--br)}
+.afl-card-txt{font-size:11px;color:var(--base);line-height:1.5}
+
+/* NOTIFY */
+.notif{position:fixed;top:56px;right:12px;z-index:300;background:var(--card);border:1px solid var(--neon);color:var(--neon);font-family:var(--mono);font-size:11px;padding:7px 12px;border-radius:5px;letter-spacing:.5px;pointer-events:none;animation:ni .3s ease}
+@keyframes ni{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+
+/* PRINT: handled via blob URL in new tab — no print CSS needed on main page */
+
+
+/* CARD NEW ELEMENTS */
+.sc-meta2{padding:5px 12px;display:flex;align-items:center;gap:5px;border-bottom:1px solid var(--brd);flex-wrap:wrap}
+.sx-toggle{font-family:var(--mono);font-size:10px;padding:3px 7px;border-radius:3px;border:1px solid var(--brd);cursor:pointer;transition:all .15s;letter-spacing:.5px;flex-shrink:0}
+.sx-toggle.G.active{background:rgba(56,189,248,.2);color:#38bdf8;border-color:#38bdf8}
+.sx-toggle.F.active{background:rgba(244,114,182,.2);color:#f472b6;border-color:#f472b6}
+.sx-toggle:not(.active){background:transparent;color:var(--mt)}
+.wv-sel{display:flex;gap:3px;flex:1;justify-content:flex-end}
+.wv-btn{font-family:var(--mono);font-size:10px;padding:3px 7px;border-radius:3px;border:1px solid var(--brd);cursor:pointer;transition:all .15s;color:var(--mt);background:transparent;flex-shrink:0}
+.wv-btn[data-w="1"].on{background:rgba(56,189,248,.2);color:var(--w1);border-color:var(--w1)}
+.wv-btn[data-w="2"].on{background:rgba(52,211,153,.2);color:var(--w2);border-color:var(--w2)}
+.wv-btn[data-w="3"].on{background:rgba(245,158,11,.2);color:var(--w3);border-color:var(--w3)}
+.wv-btn[data-w="4"].on{background:rgba(167,139,250,.2);color:var(--w4);border-color:var(--w4)}
+.sc-statrow{padding:5px 12px;display:flex;gap:5px;align-items:center;border-bottom:1px solid var(--brd)}
+.st-lbl{font-family:var(--mono);font-size:9px;color:var(--mt);letter-spacing:.5px;margin-right:2px}
+.st-btn{font-family:var(--disp);font-size:12px;font-weight:700;letter-spacing:.5px;padding:4px 10px;border-radius:4px;border:1px solid var(--brd);cursor:pointer;transition:all .15s;background:transparent;color:var(--mt)}
+.st-btn.abs-on{background:rgba(255,51,102,.15);color:var(--red);border-color:var(--red)}
+.st-btn.disp-on{background:rgba(245,158,11,.15);color:var(--w3);border-color:var(--w3)}
+/* per-course plot mini */
+.cr-pctrl{display:flex;align-items:center;gap:2px;flex-shrink:0}
+.cr-pm{width:20px;height:24px;background:var(--panel);border:1px solid var(--brd);color:var(--base);border-radius:3px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:all .15s;padding:0;flex-shrink:0}
+.cr-pm:hover{border-color:var(--neon);color:var(--neon)}
+.cr-pv{font-family:var(--mono);font-size:11px;color:var(--neon);min-width:32px;text-align:center}
+/* RESULTS TAB */
+.res-wrap{padding:12px}
+.res-topbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.res-toggle{display:flex;border:1px solid var(--brd);border-radius:6px;overflow:hidden}
+.res-t{font-family:var(--disp);font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:8px 16px;border:none;background:transparent;color:var(--mt);cursor:pointer;transition:all .2s}
+.res-t.on{background:var(--neon);color:#000}
+.stat-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.stat-chip{background:var(--card);border:1px solid var(--brd);border-radius:6px;padding:8px 14px;display:flex;flex-direction:column;gap:2px}
+.stat-v{font-family:var(--mono);font-size:18px;line-height:1}
+.stat-l{font-family:var(--mono);font-size:9px;color:var(--mt);letter-spacing:.5px}
+.res-tbl-wrap{overflow-x:auto;border-radius:8px;border:1px solid var(--brd)}
+.res-tbl{width:100%;border-collapse:collapse;font-size:11px}
+.res-tbl th{background:var(--panel);color:var(--br);font-family:var(--disp);font-weight:700;letter-spacing:.5px;padding:8px 10px;text-align:left;border-bottom:1px solid var(--brd);white-space:nowrap}
+.res-tbl td{padding:7px 10px;border-bottom:1px solid rgba(30,48,72,.4);font-family:var(--mono);font-size:11px;white-space:nowrap}
+.res-tbl tr:hover td{background:rgba(0,245,160,.03)}
+.res-tbl tr.absent td{opacity:.5}
+.res-tbl tr.dispense td{opacity:.4}
+.tot-cell{font-weight:700;font-family:var(--mono);font-size:13px;color:var(--neon)}
+/* PRINT OVERLAY */
+#printOvl{display:none}
+/* print handled in new tab */
+
+/* PASSWORD SCREEN */
+#pwdScreen{position:fixed;inset:0;background:var(--bg);z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0}
+.pwd-logo{width:56px;height:56px;background:var(--neon);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:28px;color:#000;font-weight:bold;box-shadow:0 0 24px rgba(0,245,160,.5);margin-bottom:24px}
+.pwd-title{font-family:var(--disp);font-size:28px;font-weight:900;letter-spacing:3px;color:var(--br);text-transform:uppercase;margin-bottom:6px}
+.pwd-sub{font-family:var(--mono);font-size:11px;color:var(--mt);letter-spacing:1px;margin-bottom:32px}
+.pwd-box{background:var(--card);border:1px solid var(--brd);border-radius:10px;padding:28px 32px;display:flex;flex-direction:column;gap:14px;width:min(340px,90vw)}
+.pwd-inp{background:var(--panel);border:1px solid var(--brd);color:var(--br);border-radius:6px;padding:12px 14px;font-family:var(--mono);font-size:16px;letter-spacing:2px;outline:none;transition:border-color .2s;text-align:center}
+.pwd-inp:focus{border-color:var(--neon)}
+.pwd-btn{padding:13px;border-radius:7px;border:none;background:var(--neon);color:#000;font-family:var(--disp);font-size:17px;font-weight:900;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .2s}
+.pwd-btn:hover{background:#00ffaa}
+.pwd-err{font-family:var(--mono);font-size:11px;color:var(--red);text-align:center;letter-spacing:.5px;height:16px;transition:opacity .3s}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+.pwd-shake{animation:shake .4s ease}
+
+/* AFL SPLIT SELECTOR */
+.afl-split-row{display:flex;align-items:center;gap:6px;padding:3px 0 5px;border-bottom:1px solid rgba(30,48,72,.5);margin-bottom:4px}
+.split-btns{display:flex;gap:4px}
+.split-btn{font-family:var(--mono);font-size:12px;font-weight:700;padding:5px 10px;border-radius:5px;border:1px solid var(--brd);background:var(--panel);color:var(--mt);cursor:pointer;transition:all .15s;letter-spacing:.5px}
+.split-btn:hover{border-color:var(--vi);color:var(--vi)}
+.split-btn.on{background:rgba(167,139,250,.25);border-color:var(--vi);color:var(--vi)}
+
+/* ── LIGHT MODE ── */
+body.light {
+  --neon:#00a86b;--neon2:#007a4d;--ora:#e06000;--red:#cc1144;--vi:#7c3aed;
+  --bg:#f0f4f8;--card:#ffffff;--panel:#e8edf2;--brd:#c8d4e0;
+  --mt:#7a92a8;--base:#3a5570;--br:#0f2035;
+  --w1:#0369a1;--w2:#059669;--w3:#b45309;--w4:#6d28d9;
+}
+body.light .hdr { background:linear-gradient(90deg,#dde5ef,#f0f4f8 50%,#dde5ef); }
+body.light .ctime { text-shadow:none; }
+body.light .timer-display { text-shadow:none; }
+body.light .hdr-logo { box-shadow:0 0 12px rgba(0,168,107,.3); }
+body.light .tab.on { background:rgba(0,168,107,.08); }
+body.light .sc { box-shadow:0 1px 4px rgba(0,0,0,.07); }
+body.light .zz { filter:brightness(.95)saturate(1.1); }
+body.light .tot-box { background:rgba(0,168,107,.1); border-color:rgba(0,168,107,.3); }
+body.light .prog-fill { background:var(--neon); }
+body.light .notif { background:#fff; }
+body.light .overlay { background:rgba(0,0,0,.4); }
+body.light .sheet,.light .af-inp,.light .sinp,.light .af,.light .zp-wrap { background:#fff; }
+body.light input,.light select { background:var(--panel); color:var(--br); }
+body.light #pwdScreen { background:var(--bg); }
+/* smooth transition */
+body, body * {
+  transition: background-color .25s ease, color .2s ease, border-color .2s ease;
+}
+/* but NOT animate transforms/opacity (would break animations) */
+body .cblk, body .prog-fill, body .ring-fg { transition: background .25s ease, width .4s ease, stroke-dashoffset .5s linear; }
+
+/* THEME TOGGLE BUTTON */
+.theme-btn {
+  width:34px; height:34px; border-radius:50%;
+  border:1px solid var(--brd); background:var(--panel);
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+  font-size:16px; transition:all .2s; flex-shrink:0;
+  margin-left:8px;
+}
+.theme-btn:hover { border-color:var(--neon); transform:rotate(20deg); }
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--brd);border-radius:2px}
+</style>
+</head>
+<body>
+
+
+<!-- PASSWORD SCREEN -->
+<div id="pwdScreen">
+  <div class="pwd-logo">▶</div>
+  <div class="pwd-title">EPS Demi-Fond</div>
+  <div class="pwd-sub">ACCÈS PROFESSEUR · SAISIR LE MOT DE PASSE</div>
+  <div class="pwd-box">
+    <input class="pwd-inp" id="pwdInp" type="password" placeholder="••••••••••••"
+      autocomplete="off" onkeydown="if(event.key==='Enter')checkPwd()">
+    <button class="pwd-btn" onclick="checkPwd()">Accéder →</button>
+    <div class="pwd-err" id="pwdErr">&nbsp;</div>
+  </div>
+</div>
+<header class="hdr">
+  <div class="hdr-logo">▶</div>
+  <div>
+    <div class="hdr-title">EPS Demi-Fond</div>
+    <div class="hdr-sub">PLOTS · ZONES · NOTATION AUTO</div>
+  </div>
+  <div class="hdr-export" id="hdrExport" style="display:none">
+    <button class="exp-btn xl" onclick="exportExcel()">📊 Excel</button>
+    <button class="exp-btn pdf" onclick="exportPDF()">🖨 PDF</button>
+  </div>
+  <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="Mode jour / nuit">🌙</button>
+</header>
+
+<nav>
+  <button class="tab on"  onclick="goTab('import')"  ><span class="tab-n">01</span>Import</button>
+  <button class="tab"     onclick="goTab('seconde')" ><span class="tab-n">02</span>2nde · 3×3min</button>
+  <button class="tab"     onclick="goTab('terminale')"><span class="tab-n">03</span>Term · 3×1'30</button>
+  <button class="tab"     onclick="goTab('bar-s')"   ><span class="tab-n">04</span>Barème 2nde</button>
+  <button class="tab"     onclick="goTab('bar-t')"   ><span class="tab-n">05</span>Barème Term</button>
+  <button class="tab"     onclick="goTab('results')"  ><span class="tab-n">06</span>Résultats</button>
+</nav>
+
+<!-- ══════════ IMPORT ══════════ -->
+<div class="panel on" id="panel-import">
+  <div class="dz" id="dz">
+    <input type="file" id="fileInp" accept=".xlsx,.xls" onchange="importXLSX(this.files[0])">
+    <div class="dz-icon">📊</div>
+    <div class="dz-t">Glisser un fichier Excel ici</div>
+    <div class="dz-s">ou cliquer pour parcourir · .xlsx / .xls</div>
+  </div>
+  <div id="impArea" style="display:none">
+    <div class="ss-row" id="ssRow"></div>
+    <div class="imp-info">
+      <span id="impCnt" class="cnt">0 élèves</span>
+      <button class="sbtn pr" onclick="sendToTest('s')" style="font-size:11px">▶ Envoyer → 2nde</button>
+      <button class="sbtn pr" onclick="sendToTest('t')" style="font-size:11px">▶ Envoyer → Terminale</button>
+    </div>
+    <div id="colMapInfo" style="display:none;gap:8px;flex-wrap:wrap;padding:6px 14px;font-family:var(--mono);font-size:10px;background:rgba(0,245,160,.04);border-top:1px solid rgba(0,245,160,.12);border-bottom:1px solid rgba(0,245,160,.12);letter-spacing:.3px"></div>
+    <div style="padding:3px 14px 6px;font-family:var(--mono);font-size:9px;color:var(--mt)">💡 Colonnes détectées : 👤 Nom &nbsp;·&nbsp; 🏫 Classe &nbsp;·&nbsp; ⚥ Sexe — modifiable si besoin</div>
+    <div class="imp-tbl-wrap">
+      <table class="imp-tbl"><thead id="impHead"></thead><tbody id="impBody"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ 2NDE ══════════ -->
+<div class="panel" id="panel-seconde">
+  <div class="cbar">
+    <div><div id="ct-s" class="ctime">3:00</div></div>
+    <div class="cinfo">
+      <div id="cp-s" class="cphase">PRÊT</div>
+      <div class="cblks"><div class="cblk" id="ck-s-0"></div><div class="cblk" id="ck-s-1"></div><div class="cblk" id="ck-s-2"></div></div>
+    </div>
+    <button class="cbtn go"   id="cgo-s"    onclick="cStart('s')">▶ Lancer</button>
+    <button class="cbtn pause"id="cpause-s" onclick="cPause('s')" disabled>⏸</button>
+    <button class="cbtn stop" id="cstop-s"  onclick="cStop('s')"  disabled>■</button>
+    <span class="rest-info">REPOS<br>10 min</span>
+    <div class="tgl-row">
+      <span class="tgl-lbl">REPOS</span>
+      <div class="tgl" id="tgl-s" onclick="tglRest('s')"></div>
+    </div>
+  </div>
+  <div class="sbar">
+    <input class="sinp" id="srch-s" placeholder="🔍 Chercher…" oninput="render('s')">
+    <button class="sbtn pr" onclick="openAdd('s')">+ Élève</button>
+    <button class="sbtn" onclick="doImport('s')">📥 Importer</button>
+    <span id="cnt-s" class="cnt">0 élève</span>
+  </div>
+  <div class="wfilter" id="wf-s">
+    <span class="wf-lbl">VAGUE :</span>
+    <button class="wf-btn on" data-w="all" onclick="setWave('s','all')">Toutes</button>
+    <button class="wf-btn" data-w="1" onclick="setWave('s','1')">V1</button>
+    <button class="wf-btn" data-w="2" onclick="setWave('s','2')">V2</button>
+    <button class="wf-btn" data-w="3" onclick="setWave('s','3')">V3</button>
+    <button class="wf-btn" data-w="4" onclick="setWave('s','4')">V4</button>
+  </div>
+  <div class="prog" id="prog-s"></div>
+  <div class="grid" id="grid-s"></div>
+</div>
+
+<!-- ══════════ TERMINALE ══════════ -->
+<div class="panel" id="panel-terminale">
+  <div class="cbar">
+    <div><div id="ct-t" class="ctime">1:30</div></div>
+    <div class="cinfo">
+      <div id="cp-t" class="cphase">PRÊT</div>
+      <div class="cblks"><div class="cblk" id="ck-t-0"></div><div class="cblk" id="ck-t-1"></div><div class="cblk" id="ck-t-2"></div></div>
+    </div>
+    <button class="cbtn go"   id="cgo-t"    onclick="cStart('t')">▶ Lancer</button>
+    <button class="cbtn pause"id="cpause-t" onclick="cPause('t')" disabled>⏸</button>
+    <button class="cbtn stop" id="cstop-t"  onclick="cStop('t')"  disabled>■</button>
+    <span class="rest-info">REPOS<br>7 min</span>
+    <div class="tgl-row">
+      <span class="tgl-lbl">REPOS</span>
+      <div class="tgl" id="tgl-t" onclick="tglRest('t')"></div>
+    </div>
+  </div>
+  <div class="sbar">
+    <input class="sinp" id="srch-t" placeholder="🔍 Chercher…" oninput="render('t')">
+    <button class="sbtn pr" onclick="openAdd('t')">+ Élève</button>
+    <button class="sbtn" onclick="doImport('t')">📥 Importer</button>
+    <span id="cnt-t" class="cnt">0 élève</span>
+  </div>
+  <div class="wfilter" id="wf-t">
+    <span class="wf-lbl">VAGUE :</span>
+    <button class="wf-btn on" data-w="all" onclick="setWave('t','all')">Toutes</button>
+    <button class="wf-btn" data-w="1" onclick="setWave('t','1')">V1</button>
+    <button class="wf-btn" data-w="2" onclick="setWave('t','2')">V2</button>
+    <button class="wf-btn" data-w="3" onclick="setWave('t','3')">V3</button>
+    <button class="wf-btn" data-w="4" onclick="setWave('t','4')">V4</button>
+  </div>
+  <div class="prog" id="prog-t"></div>
+  <div class="grid" id="grid-t"></div>
+</div>
+
+<!-- ══════════ BARÈME 2NDE ══════════ -->
+<div class="panel" id="panel-bar-s">
+  <div class="bar-wrap">
+    <div class="bar-section">
+      <div class="bar-title">🏅 AFL1 — Performance <span style="font-size:14px;color:var(--mt)">/8</span></div>
+      <div class="bar-sub">DISTANCE TOTALE SUR 3 COURSES (3 × 3 MIN)</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <div style="font-family:var(--mono);font-size:10px;color:#38bdf8;letter-spacing:1px;margin-bottom:6px;padding:4px 8px;background:rgba(56,189,248,.08);border-radius:4px">♂ GARÇONS</div>
+          <table class="btbl">
+            <thead><tr><th>Niveau</th><th>Plot VMA</th><th>Distance</th><th>Note /8</th></tr></thead>
+            <tbody id="btbl-s-g"></tbody>
+          </table>
+        </div>
+        <div>
+          <div style="font-family:var(--mono);font-size:10px;color:#f472b6;letter-spacing:1px;margin-bottom:6px;padding:4px 8px;background:rgba(244,114,182,.08);border-radius:4px">♀ FILLES</div>
+          <table class="btbl">
+            <thead><tr><th>Niveau</th><th>Plot VMA</th><th>Distance</th><th>Note /8</th></tr></thead>
+            <tbody id="btbl-s-f"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="bar-section">
+      <div class="bar-title">🎯 AFL1 — Maîtrise <span style="font-size:14px;color:var(--mt)">/6</span></div>
+      <div class="bar-sub">ZONE D'ARRIVÉE · 3 COURSES × 2 POINTS MAX</div>
+      <div class="zone-pills" id="zpills-s"></div>
+    </div>
+    <div class="bar-section">
+      <div class="bar-title">⚡ AFL2 — Autonomie <span style="font-size:14px;color:var(--mt)">/4</span></div>
+      <div class="bar-sub">GESTION DE LA SÉANCE · ÉCHAUFFEMENT · PROJET DE COURSE</div>
+      <div class="afl-cards" id="afl2-s-cards"></div>
+    </div>
+    <div class="bar-section">
+      <div class="bar-title">⏱ AFL3 — Chronométreur <span style="font-size:14px;color:var(--mt)">/2</span></div>
+      <div class="bar-sub">QUALITÉ DU RÔLE DE CHRONOMÉTREUR / JUGE</div>
+      <div class="afl-cards" id="afl3-s-cards"></div>
+    </div>
+    <div style="background:var(--panel);border:1px solid var(--brd);border-radius:8px;padding:14px;font-family:var(--mono);font-size:12px;color:var(--base)">
+      <div style="color:var(--neon);font-weight:700;margin-bottom:8px;font-family:var(--disp);font-size:16px;letter-spacing:1px">TOTAL /20 = AFL1 Perf /8 + AFL1 Maîtrise /6 + AFL2 /4 + AFL3 /2</div>
+      <div style="color:var(--mt);font-size:10px">💡 Zone + (au-delà) → l'élève a couru plus loin que la cible → distance réelle supérieure → impact positif sur la performance</div>
+      <div style="color:var(--mt);font-size:10px;margin-top:4px">💡 Zone − (en deçà) → l'élève a couru moins loin → distance réelle inférieure</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ BARÈME TERMINALE ══════════ -->
+<div class="panel" id="panel-bar-t">
+  <div class="bar-wrap">
+    <div class="bar-section">
+      <div class="bar-title">🏅 AFL1 — Performance <span style="font-size:14px;color:var(--mt)">/6</span></div>
+      <div class="bar-sub">DISTANCE TOTALE SUR 3 COURSES (3 × 1 MIN 30)</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <div style="font-family:var(--mono);font-size:10px;color:#38bdf8;letter-spacing:1px;margin-bottom:6px;padding:4px 8px;background:rgba(56,189,248,.08);border-radius:4px">♂ GARÇONS</div>
+          <table class="btbl"><thead><tr><th>Niveau</th><th>Vitesse</th><th>Distance</th><th>Note /6</th></tr></thead><tbody id="btbl-t-g"></tbody></table>
+        </div>
+        <div>
+          <div style="font-family:var(--mono);font-size:10px;color:#f472b6;letter-spacing:1px;margin-bottom:6px;padding:4px 8px;background:rgba(244,114,182,.08);border-radius:4px">♀ FILLES</div>
+          <table class="btbl"><thead><tr><th>Niveau</th><th>Vitesse</th><th>Distance</th><th>Note /6</th></tr></thead><tbody id="btbl-t-f"></tbody></table>
+        </div>
+      </div>
+    </div>
+    <div class="bar-section">
+      <div class="bar-title">🎯 AFL1 — Maîtrise <span style="font-size:14px;color:var(--mt)">/6</span></div>
+      <div class="bar-sub">ZONE D'ARRIVÉE · 3 COURSES × 2 POINTS MAX · ZONES ± DONNENT LE MÊME SCORE</div>
+      <div class="zone-pills" id="zpills-t"></div>
+    </div>
+    <div class="bar-section">
+      <div class="bar-title">⚡ AFL2 — Autonomie <span style="font-size:14px;color:var(--mt)">/4</span></div>
+      <div class="bar-sub">GESTION DE LA SÉANCE · ÉCHAUFFEMENT · PROJET DE COURSE</div>
+      <div class="afl-cards" id="afl2-t-cards"></div>
+    </div>
+    <div class="bar-section">
+      <div class="bar-title">⏱ AFL3 — Chronométreur <span style="font-size:14px;color:var(--mt)">/4</span></div>
+      <div class="bar-sub">QUALITÉ DU RÔLE DE CHRONOMÉTREUR / JUGE</div>
+      <div class="afl-cards" id="afl3-t-cards"></div>
+    </div>
+    <div style="background:var(--panel);border:1px solid var(--brd);border-radius:8px;padding:14px;font-family:var(--mono);font-size:12px;color:var(--base)">
+      <div style="color:var(--neon);font-weight:700;margin-bottom:8px;font-family:var(--disp);font-size:16px;letter-spacing:1px">TOTAL /20 = AFL1 Perf /6 + AFL1 Maîtrise /6 + AFL2 /4 + AFL3 /4</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ ZONE PICKER SHEET ══════════ -->
+<div class="overlay" id="zpOvl" onclick="closeZP(event)">
+  <div class="sheet">
+    <div class="sh-handle"></div>
+    <div class="sh-title" id="zp-name"></div>
+    <div class="sh-sub" id="zp-sub"></div>
+    <div class="sh-div"></div>
+    <div class="zp-wrap">
+      <div class="zp-plot-row">
+        <div class="zp-lbl">PLOT DÉPART<br><span id="zp-clbl" style="color:var(--base)"></span></div>
+        <div class="zp-ctrl">
+          <button class="zp-btn" onclick="zpAdjust(-0.5)">−</button>
+          <div id="zp-pv" class="zp-v">16.0</div>
+          <button class="zp-btn" onclick="zpAdjust(+0.5)">+</button>
+          <span style="font-family:var(--mono);font-size:10px;color:var(--mt)">km/h</span>
+        </div>
+      </div>
+      <div class="zones-grid" id="zGrid"></div>
+    </div>
+    <div class="sh-actions">
+      <button class="sa-clear" onclick="zpClear()">✕ Effacer</button>
+      <button class="sa-ok" onclick="closeZP()">✓ Valider</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ ADD STUDENT SHEET ══════════ -->
+<div class="overlay" id="addOvl" onclick="closeAdd(event)">
+  <div class="sheet">
+    <div class="sh-handle"></div>
+    <div class="sh-title" id="addTitle">Ajouter un élève</div>
+    <div class="sh-div" style="margin-top:8px"></div>
+    <div class="af">
+      <div class="af-row">
+        <div class="af-group">
+          <label class="af-label">NOM Prénom</label>
+          <input class="af-inp" id="af-nom" type="text" placeholder="DUPONT Marie" autocomplete="off">
+        </div>
+        <div class="af-group">
+          <label class="af-label">CLASSE</label>
+          <input class="af-inp" id="af-cls" type="text" placeholder="2nde A" autocomplete="off">
+        </div>
+      </div>
+      <div class="af-row">
+        <div class="af-group">
+          <label class="af-label">SEXE</label>
+          <select class="af-inp" id="af-sex">
+            <option value="G">G — Garçon</option>
+            <option value="F">F — Fille</option>
+          </select>
+        </div>
+        <div class="af-group">
+          <label class="af-label">PLOT VMA (km/h)</label>
+          <input class="af-inp" id="af-plot" type="number" min="8" max="22" step="0.5" placeholder="16">
+        </div>
+      </div>
+      <div class="af-group">
+        <label class="af-label">VAGUE</label>
+        <div class="wave-sel" id="addWaveSel">
+          <div class="ws-opt on" data-w="1" onclick="selWave(1)">V1</div>
+          <div class="ws-opt" data-w="2" onclick="selWave(2)">V2</div>
+          <div class="ws-opt" data-w="3" onclick="selWave(3)">V3</div>
+          <div class="ws-opt" data-w="4" onclick="selWave(4)">V4</div>
+        </div>
+      </div>
+      <button class="af-add" onclick="confirmAdd()">+ Ajouter l'élève</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ════════════════ CONFIG ════════════════ */
+const CFG = {
+  s: { dur:180, rest:600, n:3, maxP:8,  maxM:6, maxA2:4, maxA3:2 },
+  t: { dur:90,  rest:420, n:3, maxP:6,  maxM:6, maxA2:4, maxA3:4 }
+};
+
+/* ════════════ ZONE DATA ════════════ */
+const ZD = {
+  s: {
+    'B' : {dev:0,   mait:2,    lbl:'Bleue',    cls:'B'},
+    'J' : {dev:.5,  mait:1.5,  lbl:'Jaune +',  cls:'J'},
+    'J-': {dev:-.5, mait:1,    lbl:'Jaune −',  cls:'Jm'},
+    'R' : {dev:1,   mait:.75,  lbl:'Rouge +',  cls:'R'},
+    'R-': {dev:-1,  mait:.5,   lbl:'Rouge −',  cls:'Rm'},
+    'W' : {dev:1.5, mait:.25,  lbl:'Blanche+', cls:'W'},
+    'W-': {dev:-1.5,mait:0,    lbl:'Blanche−', cls:'Wm'},
+    'N' : {dev:2,   mait:0,    lbl:'Hors +',   cls:'N'},
+    'N-': {dev:-2,  mait:0,    lbl:'Hors −',   cls:'Nm'},
+  },
+  t: {
+    'B' : {dev:0,   mait:2,    lbl:'Bleue',    cls:'B'},
+    'J' : {dev:.5,  mait:1.5,  lbl:'Jaune +',  cls:'J'},
+    'J-': {dev:-.5, mait:1.5,  lbl:'Jaune −',  cls:'Jm'},
+    'R' : {dev:1,   mait:.75,  lbl:'Rouge +',  cls:'R'},
+    'R-': {dev:-1,  mait:.75,  lbl:'Rouge −',  cls:'Rm'},
+    'W' : {dev:1.5, mait:.25,  lbl:'Blanche+', cls:'W'},
+    'W-': {dev:-1.5,mait:.25,  lbl:'Blanche−', cls:'Wm'},
+    'N' : {dev:2,   mait:0,    lbl:'Hors +',   cls:'N'},
+    'N-': {dev:-2,  mait:0,    lbl:'Hors −',   cls:'Nm'},
+  }
+};
+
+/* Perf ref tables [minDist, note] */
+const REF = {
+  s:{G:[[3150,8],[3075,8],[3000,8],[2925,8],[2850,8],[2775,8],[2700,8],[2625,8],[2550,8],[2475,8],[2400,7.5],[2325,7],[2250,6.5],[2175,6],[2100,5.5],[2025,5],[1950,4.5],[1875,4],[1800,3.5],[1725,3],[1650,2.5],[1575,2],[1500,1.5],[1425,1],[1350,.5],[1275,0],[1200,0]],
+     F:[[3000,8],[2925,8],[2850,8],[2775,8],[2700,8],[2625,8],[2550,8],[2475,8],[2400,8],[2325,8],[2250,7.5],[2175,7],[2100,6.5],[2025,6],[1950,5.5],[1875,5],[1800,4.5],[1725,4],[1650,3.5],[1575,3],[1500,2.5],[1425,2],[1350,1.5],[1275,1],[1200,.5]]},
+  t:{G:[[1600,6],[1500,6],[1450,5.75],[1425,5.5],[1400,5.25],[1375,5],[1350,4.75],[1325,4.5],[1300,4.25],[1275,4],[1250,3.75],[1225,3.5],[1200,3.25],[1175,3],[1150,2.75],[1125,2.5],[1100,2.25],[1075,2],[1050,1.75],[1025,1.5],[1000,1.25],[975,1],[950,.75],[925,.5],[900,.25]],
+     F:[[1400,6],[1275,6],[1250,5.75],[1225,5.5],[1200,5.25],[1175,5],[1150,4.75],[1125,4.5],[1100,4.25],[1075,4],[1050,3.75],[1025,3.5],[1000,3.25],[975,3],[950,2.75],[925,2.5],[900,2.25],[875,2],[850,1.75],[825,1.5],[800,1.25],[775,1],[750,.75],[725,.5],[700,.25]]}
+};
+
+/* AFL scores by degree (index = degree-1) */
+const AFL_S = { s:{ a2:[0,1,2,4], a3:[0.5,1,1.5,2] }, t:{ a2:[0,1,2.5,4], a3:[0,1,2.5,4] } };
+// Split options for Terminale [AFL2 max, AFL3 max]
+const T_SPLITS = { '2/6':[2,6], '4/4':[4,4], '6/2':[6,2] };
+function getSplitMaxes(split){ return T_SPLITS[split]||[4,4]; }
+function getScaledScores(base,max){ return base.map(v=>Math.round(v*max/4*100)/100); }
+const AFL2_D = ['Passif','Partiel','Autonome','Expert'];
+const AFL3_D = ['Passif','Basique','Actif','Expert'];
+const AFL2_DESC = [
+  'Échauffement guidé ou absent. Récupération passive. Aucun projet de course. Séance inadaptée.',
+  'Échauffement partiel et générique. Suit les propositions de l\'enseignant. Projet de course identique à un camarade.',
+  'Échauffement autonome et progressif. Récupération active. Séance adaptée. Projet de course prévu et construit.',
+  'Échauffement complet, spécifique et optimisé. Récupération active. Projet anticipé, réalisé et ajusté.'
+];
+const AFL3_DESC = [
+  'Chronomètre mal géré, peu de concentration, échanges quasi-inexistants avec le coureur.',
+  'Chronomètre fonctionnel, observations simples, peu d\'échanges avec le coureur.',
+  'Chronomètre précis, échanges réguliers, conseils utiles sur la gestion de course.',
+  'Chronomètre exemplaire, multiples observations pertinentes, échanges argumentés, aide précieuse à la stratégie.'
+];
+
+function perfNote(dist, sex, type) {
+  const tbl = REF[type][sex==='F'?'F':'G'];
+  for(const [d,n] of tbl) if(dist>=d) return n;
+  return 0;
+}
+const FACTOR = {s:50,t:25}; // m per km/h per course (3min×1000/60=50, 1.5min×1000/60=25)
+
+function calcStu(stu, type) {
+  if(stu.status !== 'normal') return null;
+  let dSum=0, mSum=0, runs=0;
+  const f = FACTOR[type];
+  for(let i=0;i<3;i++){
+    const z = stu.zones[i];
+    if(z !== null){
+      const p = stu.plots[i] ?? stu.plot;
+      dSum += (p + ZD[type][z].dev) * f;
+      mSum += ZD[type][z].mait;
+      runs++;
+    }
+  }
+  if(!runs) return {perf:null,mait:null,afl2:null,afl3:null,total:null,dist:0,runs:0};
+  const fullDist = Math.round(dSum / runs * 3);
+  const perf = Math.round(perfNote(fullDist, stu.sexe, type)*100)/100;
+  const mait = Math.round(mSum*100)/100;
+  let afl2, afl3;
+  if(type === 't'){
+    const [m2,m3] = getSplitMaxes(stu.afl_split||'4/4');
+    const sc2 = getScaledScores(AFL_S.t.a2, m2);
+    const sc3 = getScaledScores(AFL_S.t.a3, m3);
+    afl2 = stu.afl2 !== null ? sc2[stu.afl2-1] : null;
+    afl3 = stu.afl3 !== null ? sc3[stu.afl3-1] : null;
+  } else {
+    afl2 = stu.afl2 !== null ? AFL_S.s.a2[stu.afl2-1] : null;
+    afl3 = stu.afl3 !== null ? AFL_S.s.a3[stu.afl3-1] : null;
+  }
+  const total = (perf + mait + (afl2??0) + (afl3??0));
+  return {perf, mait, afl2, afl3, total:Math.round(total*100)/100, dist:fullDist, runs};
+}
+
+/* ════════════════ STATE ════════════════ */
+let stu = {s:[],t:[]};
+let nid = 1;
+let waveFilter = {s:'all', t:'all'};
+let addTarget = 's';
+let addWave = 1;
+let picker = {type:null,id:null,ci:null};
+let impRows = [];
+let wb = null;
+
+// Chrono
+const CH = {
+  s:{iv:null,rem:180,blk:0,phase:'idle',paused:false,restOn:false},
+  t:{iv:null,rem:90, blk:0,phase:'idle',paused:false,restOn:false}
+};
+
+/* ════════════════ STUDENT ════════════════ */
+function mkStu(nom='',cls='',sex='G',plot=16,wave=1){
+  const p = parseFloat(plot)||16;
+  return {id:nid++,nom:nom.trim(),cls:cls.trim(),sexe:sex,plot:p,plots:[p,p,p],zones:[null,null,null],status:'normal',wave:parseInt(wave)||1,afl2:null,afl3:null,afl_split:'4/4'};
+}
+
+function setStatus(type,id,newStatus){
+  const s=stu[type].find(x=>x.id===id);if(!s) return;
+  s.status = s.status===newStatus ? 'normal' : newStatus;
+  render(type);
+}
+function toggleSex(type,id){
+  const s=stu[type].find(x=>x.id===id);if(!s) return;
+  s.sexe = s.sexe==='G'?'F':'G';
+  render(type);
+}
+function setStudentWave(type,id,wave){
+  const s=stu[type].find(x=>x.id===id);if(!s) return;
+  s.wave=wave;
+  render(type);
+}
+function adjCoursePlot(type,id,ci,delta){
+  const s=stu[type].find(x=>x.id===id);if(!s) return;
+  s.plots[ci]=Math.round(Math.max(8,Math.min(22,(s.plots[ci]??s.plot)+delta))*10)/10;
+  render(type);
+}
+function adjPlot(type,id,delta){
+  const s=stu[type].find(x=>x.id===id);if(!s) return;
+  s.plot=Math.round(Math.max(8,Math.min(22,(s.plot+delta))*10))/10;
+  s.plots=[s.plot,s.plot,s.plot];
+  render(type);
+}
+function delStu(type,id){ stu[type]=stu[type].filter(x=>x.id!==id); render(type); }
+function setAfl(type,id,afl,deg){
+  const s = stu[type].find(x=>x.id===id); if(!s) return;
+  s[afl] = s[afl]===deg ? null : deg;
+  // Re-render just score part
+  const scoreEl = document.getElementById('sc-score-'+type+'-'+id);
+  const aflEl   = document.getElementById('sc-afl-'+type+'-'+id);
+  if(scoreEl) scoreEl.innerHTML = buildScore(s,type);
+  if(aflEl)   aflEl.innerHTML   = buildAfl(s,type);
+}
+
+function setAflSplit(type,id,split){
+  const s=stu[type].find(x=>x.id===id);if(!s) return;
+  s.afl_split = split;
+  const aflEl   = document.getElementById('sc-afl-'+type+'-'+id);
+  const scoreEl = document.getElementById('sc-score-'+type+'-'+id);
+  if(aflEl)   aflEl.innerHTML   = buildAfl(s,type);
+  if(scoreEl) scoreEl.innerHTML = buildScore(s,type);
+}
+
+/* ════════════════ RENDER ════════════════ */
+function render(type){
+  const grid = document.getElementById('grid-'+type);
+  const q = (document.getElementById('srch-'+type)?.value||'').toLowerCase();
+  const wf = waveFilter[type];
+  let list = stu[type].filter(s=>{
+    const mq = !q || s.nom.toLowerCase().includes(q) || s.cls.toLowerCase().includes(q);
+    const mw = wf==='all' || String(s.wave)===String(wf);
+    return mq && mw;
+  });
+  document.getElementById('cnt-'+type).textContent = stu[type].length+' élève'+(stu[type].length!==1?'s':'');
+  // Progress
+  const active = stu[type].filter(s=>s.status==='normal');
+  const done   = active.filter(s=>s.zones.every(z=>z!==null)&&s.afl2!==null&&s.afl3!==null).length;
+  const pg = document.getElementById('prog-'+type);
+  if(active.length){
+    const pct=Math.round(done/active.length*100);
+    pg.className='prog show';
+    pg.innerHTML=`<span>NOTÉS : ${done}/${active.length}</span><div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div><span style="color:var(--neon)">${pct}%</span>`;
+  } else pg.className='prog';
+  // Wave counts for filter buttons
+  [1,2,3,4].forEach(w=>{
+    const btn = document.querySelector(`#wf-${type} .wf-btn[data-w="${w}"]`);
+    if(btn){
+      const c = stu[type].filter(s=>s.wave===w).length;
+      btn.textContent = 'V'+w+(c?' ('+c+')':'');
+    }
+  });
+  if(!list.length){
+    grid.innerHTML=`<div class="empty-state"><div class="es-icon">${stu[type].length===0?'👥':'🔍'}</div><div class="es-t">${stu[type].length===0?'Aucun élève':'Aucun résultat'}</div><div class="es-s">${stu[type].length===0?'Importer votre liste Excel\nou cliquer « + Élève »':'Essayez un autre terme'}</div></div>`;
+    return;
+  }
+  // Group by wave
+  const byWave = {};
+  list.forEach(s=>{ if(!byWave[s.wave]) byWave[s.wave]=[]; byWave[s.wave].push(s); });
+  let html='';
+  Object.keys(byWave).sort().forEach(w=>{
+    const wnum = parseInt(w);
+    const wcolor = ['','var(--w1)','var(--w2)','var(--w3)','var(--w4)'][wnum]||'var(--base)';
+    if(wf==='all'){
+      html+=`<div style="grid-column:1/-1;display:flex;align-items:center;gap:8px;padding:4px 0 2px"><div style="height:2px;flex:0 0 24px;background:${wcolor};border-radius:1px"></div><span style="font-family:var(--mono);font-size:10px;color:${wcolor};letter-spacing:1px">VAGUE ${w}</span><div style="height:1px;flex:1;background:var(--brd)"></div></div>`;
+    }
+    byWave[w].forEach(s=>{ html+=buildCard(s,type); });
+  });
+  grid.innerHTML=html;
+}
+
+function buildCard(s,type){
+  const sa = s.status;
+  const ovl = sa==='absent'?'ABSENT':sa==='dispense'?'DISPENSÉ':'';
+  const c = calcStu(s,type);
+  return `<div class="sc ${sa!=='normal'?sa:''}" id="sc-${type}-${s.id}">
+    <div class="sc-status-overlay">${ovl}</div>
+    <div class="sc-head">
+      <div class="sc-name">${s.nom||'Élève #'+s.id}</div>
+      <button class="ico-btn del" onclick="delStu('${type}',${s.id})">✕</button>
+    </div>
+    <!-- ROW: class + sex toggle + wave selector -->
+    <div class="sc-meta2">
+      <span class="sc-class">${s.cls||'—'}</span>
+      <button class="sx-toggle G${s.sexe==='G'?' active':''}" onclick="toggleSex('${type}',${s.id})">G</button>
+      <button class="sx-toggle F${s.sexe==='F'?' active':''}" onclick="toggleSex('${type}',${s.id})">F</button>
+      <div class="wv-sel">
+        ${[1,2,3,4].map(w=>`<button class="wv-btn${s.wave===w?' on':''}" data-w="${w}" onclick="setStudentWave('${type}',${s.id},${w})">V${w}</button>`).join('')}
+      </div>
+    </div>
+    <!-- ROW: absent / dispensé -->
+    <div class="sc-statrow">
+      <span class="st-lbl">STATUT :</span>
+      <button class="st-btn${sa==='absent'?' abs-on':''}" onclick="setStatus('${type}',${s.id},'absent')">ABSENT</button>
+      <button class="st-btn${sa==='dispense'?' disp-on':''}" onclick="setStatus('${type}',${s.id},'dispense')">DISPENSÉ</button>
+      ${c&&c.dist?`<span style="font-family:var(--mono);font-size:9px;color:var(--mt);margin-left:auto">${c.dist}m · ${c.runs}/3 🏃</span>`:''}
+    </div>
+    <div class="sc-body">
+      <!-- GLOBAL PLOT -->
+      <div class="sc-plot">
+        <span class="plot-lbl">PLOT VMA (toutes courses)</span>
+        <div class="plot-ctrl">
+          <button class="p-btn" onclick="adjPlot('${type}',${s.id},-0.5)">−</button>
+          <span class="p-val">${s.plot}</span>
+          <button class="p-btn" onclick="adjPlot('${type}',${s.id},+0.5)">+</button>
+          <span class="p-unit">km/h</span>
+        </div>
+      </div>
+      <div class="sc-courses">${buildCourses(s,type)}</div>
+      <div class="sc-afl" id="sc-afl-${type}-${s.id}">${buildAfl(s,type)}</div>
+      <div class="sc-score" id="sc-score-${type}-${s.id}">${buildScore(s,type)}</div>
+    </div>
+  </div>`;
+}
+
+function buildCourses(s,type){
+  return [0,1,2].map(i=>{
+    const z = s.zones[i], p = s.plots[i]??s.plot;
+    const zdata = z ? ZD[type][z] : null;
+    let zbtn, pts;
+    if(zdata){
+      zbtn=`<button class="zb z${zdata.cls}" onclick="openZP('${type}',${s.id},${i})">${z}</button>`;
+      pts=`<span class="cr-pts" style="color:${zdata.mait>=1.5?'var(--neon)':zdata.mait>=.5?'var(--ora)':'var(--mt)'}">${zdata.mait}pt</span>`;
+    } else {
+      zbtn=`<button class="zb empty" onclick="openZP('${type}',${s.id},${i})">+ Zone</button>`;
+      pts=`<span class="cr-pts" style="color:var(--mt)">?</span>`;
+    }
+    // Per-course plot mini controls
+    const pctrl=`<div class="cr-pctrl"><button class="cr-pm" onclick="adjCoursePlot('${type}',${s.id},${i},-0.5)">−</button><span class="cr-pv">${p}</span><button class="cr-pm" onclick="adjCoursePlot('${type}',${s.id},${i},+0.5)">+</button></div>`;
+    return `<div class="cr"><span class="cr-lbl">C${i+1}</span>${pctrl}${zbtn}${pts}</div>`;
+  }).join('');
+}
+
+function buildAfl(s,type){
+  if(type === 't'){
+    // TERMINALE: split choice + value-labeled buttons
+    const split = s.afl_split || '4/4';
+    const [m2,m3] = getSplitMaxes(split);
+    const sc2 = getScaledScores(AFL_S.t.a2, m2);
+    const sc3 = getScaledScores(AFL_S.t.a3, m3);
+    const splitBtns = ['2/6','4/4','6/2'].map(sp=>
+      `<button class="split-btn${split===sp?' on':''}" onclick="setAflSplit('t',${s.id},'${sp}')">${sp}</button>`
+    ).join('');
+    const mk2 = sc2.map((v,i)=>
+      `<button class="afl-d${s.afl2===i+1?' on':''}" onclick="setAfl('t',${s.id},'afl2',${i+1})" title="${AFL2_D[i]}">${v}</button>`
+    ).join('');
+    const mk3 = sc3.map((v,i)=>
+      `<button class="afl-d${s.afl3===i+1?' on':''}" onclick="setAfl('t',${s.id},'afl3',${i+1})" title="${AFL3_D[i]}">${v}</button>`
+    ).join('');
+    const a2s = s.afl2!==null ? sc2[s.afl2-1] : null;
+    const a3s = s.afl3!==null ? sc3[s.afl3-1] : null;
+    return `
+      <div class="afl-split-row">
+        <span class="afl-lbl">RÉPART.</span>
+        <div class="split-btns">${splitBtns}</div>
+        <span style="font-family:var(--mono);font-size:9px;color:var(--mt);margin-left:4px">AFL2+AFL3=8pts</span>
+      </div>
+      <div class="afl-row">
+        <span class="afl-lbl">AFL2</span>
+        <div class="afl-btns">${mk2}</div>
+        <span class="afl-score">${a2s!==null?a2s:'?'}/${m2}</span>
+      </div>
+      <div class="afl-row">
+        <span class="afl-lbl">AFL3</span>
+        <div class="afl-btns">${mk3}</div>
+        <span class="afl-score">${a3s!==null?a3s:'?'}/${m3}</span>
+      </div>`;
+  } else {
+    // SECONDE: AFL2 degree labels (0,1,2,4pts), AFL3 value labels (0.5,1,1.5,2pts)
+    const a2vals = AFL_S.s.a2; // [0,1,2,4]
+    const a3vals = AFL_S.s.a3; // [0.5,1,1.5,2]
+    const mk2 = a2vals.map((v,i)=>
+      `<button class="afl-d${s.afl2===i+1?' on':''}" onclick="setAfl('s',${s.id},'afl2',${i+1})" title="${AFL2_D[i]}">${v}</button>`
+    ).join('');
+    const mk3 = a3vals.map((v,i)=>
+      `<button class="afl-d${s.afl3===i+1?' on':''}" onclick="setAfl('s',${s.id},'afl3',${i+1})" title="${AFL3_D[i]}">${v}</button>`
+    ).join('');
+    const a2s = s.afl2!==null ? a2vals[s.afl2-1] : null;
+    const a3s = s.afl3!==null ? a3vals[s.afl3-1] : null;
+    return `
+      <div class="afl-row">
+        <span class="afl-lbl">AFL2</span>
+        <div class="afl-btns">${mk2}</div>
+        <span class="afl-score">${a2s!==null?a2s:'?'}/${CFG.s.maxA2}</span>
+      </div>
+      <div class="afl-row">
+        <span class="afl-lbl">AFL3</span>
+        <div class="afl-btns">${mk3}</div>
+        <span class="afl-score">${a3s!==null?a3s:'?'}/${CFG.s.maxA3}</span>
+      </div>`;
+  }
+}
+
+function buildScore(s,type){
+  const c = calcStu(s,type);
+  if(s.status!=='normal') return `<div style="font-family:var(--mono);font-size:10px;color:var(--mt);width:100%;text-align:center;text-transform:uppercase;letter-spacing:1px">${s.status==='absent'?'Absent':'Dispensé'}</div>`;
+  if(!c||c.total===null){
+    return `<div style="font-family:var(--mono);font-size:10px;color:var(--mt);letter-spacing:.5px">Renseigner zones + AFL pour la note</div>`;
+  }
+  const cfg = CFG[type];
+  const mA2 = type==='t' ? getSplitMaxes(s.afl_split||'4/4')[0] : cfg.maxA2;
+  const mA3 = type==='t' ? getSplitMaxes(s.afl_split||'4/4')[1] : cfg.maxA3;
+  return `
+    <div class="sc-item"><div class="sv p">${c.perf}</div><div class="sl">PERF /${cfg.maxP}</div></div>
+    <div class="sc-sep"></div>
+    <div class="sc-item"><div class="sv m">${c.mait}</div><div class="sl">MAÎT /${cfg.maxM}</div></div>
+    <div class="sc-sep"></div>
+    <div class="sc-item"><div class="sv a">${c.afl2??'—'}</div><div class="sl">AFL2 /${mA2}</div></div>
+    <div class="sc-sep"></div>
+    <div class="sc-item"><div class="sv a">${c.afl3??'—'}</div><div class="sl">AFL3 /${mA3}</div></div>
+    <div class="sc-sep"></div>
+    <div class="sc-item tot-box"><div class="sv t">${c.total}</div><div class="sl">/ 20</div></div>`;
+}
+
+/* ════════════════ WAVE FILTER ════════════════ */
+function setWave(type, w){
+  waveFilter[type] = w;
+  document.querySelectorAll(`#wf-${type} .wf-btn`).forEach(b=>b.classList.toggle('on',b.dataset.w===w));
+  render(type);
+}
+
+/* ════════════════ ZONE PICKER ════════════════ */
+function openZP(type,id,ci){
+  const s = stu[type].find(x=>x.id===id); if(!s) return;
+  picker = {type,id,ci};
+  document.getElementById('zp-name').textContent = s.nom||'Élève #'+id;
+  document.getElementById('zp-sub').textContent  = ['Course 1','Course 2','Course 3'][ci]+' · '+(type==='s'?'2nde · 3min':'Term · 1min30');
+  document.getElementById('zp-clbl').textContent = 'Course '+(ci+1);
+  document.getElementById('zp-pv').textContent   = s.plots[ci]??s.plot;
+  buildZones(s.zones[ci],type);
+  document.getElementById('zpOvl').classList.add('vis');
+}
+function buildZones(sel,type){
+  const rows=[['B'],['J','J-'],['R','R-'],['W','W-'],['N','N-']];
+  document.getElementById('zGrid').innerHTML = rows.map(row=>`
+    <div class="zrow">${row.map(z=>{
+      const d=ZD[type][z];
+      return `<div class="zz z${d.cls}${sel===z?' sel':''}" onclick="zpSel('${z}')">
+        <span class="zz-code">${z}</span>
+        <span class="zz-name">${d.lbl}</span>
+        <span class="zz-pts">${d.mait>0?'+':''}${d.mait}pt</span>
+      </div>`;
+    }).join('')}</div>`).join('');
+}
+function zpSel(z){
+  const s = stu[picker.type]?.find(x=>x.id===picker.id); if(!s) return;
+  s.zones[picker.ci] = z;
+  const p = parseFloat(document.getElementById('zp-pv').textContent);
+  if(!isNaN(p)) s.plots[picker.ci] = p;
+  buildZones(z,picker.type);
+  setTimeout(()=>closeZP(),500);
+}
+function zpClear(){
+  const s = stu[picker.type]?.find(x=>x.id===picker.id); if(!s) return;
+  s.zones[picker.ci]=null;
+  closeZP();
+}
+function zpAdjust(d){
+  const el = document.getElementById('zp-pv');
+  let v = Math.round(Math.max(8,Math.min(22,(parseFloat(el.textContent)+d)))*10)/10;
+  el.textContent=v;
+  const s = stu[picker.type]?.find(x=>x.id===picker.id);
+  if(s) s.plots[picker.ci]=v;
+}
+function closeZP(e){
+  if(e && e.target!==document.getElementById('zpOvl')) return;
+  document.getElementById('zpOvl').classList.remove('vis');
+  if(picker.type) render(picker.type);
+  picker={type:null,id:null,ci:null};
+}
+
+/* ════════════════ ADD STUDENT ════════════════ */
+function openAdd(type){
+  addTarget=type;
+  document.getElementById('addTitle').textContent = type==='s'?'Ajouter — 2nde':'Ajouter — Terminale';
+  document.getElementById('af-nom').value='';
+  document.getElementById('af-cls').value='';
+  document.getElementById('af-plot').value=type==='s'?16:15;
+  selWave(waveFilter[type]==='all'?1:parseInt(waveFilter[type])||1);
+  document.getElementById('addOvl').classList.add('vis');
+  setTimeout(()=>document.getElementById('af-nom').focus(),300);
+}
+function selWave(w){
+  addWave=w;
+  document.querySelectorAll('#addWaveSel .ws-opt').forEach(b=>b.classList.toggle('on',parseInt(b.dataset.w)===w));
+}
+function closeAdd(e){
+  if(!e||e.target===document.getElementById('addOvl')) document.getElementById('addOvl').classList.remove('vis');
+}
+function confirmAdd(){
+  const nom = document.getElementById('af-nom').value.trim();
+  if(!nom){ document.getElementById('af-nom').focus(); return; }
+  const cls  = document.getElementById('af-cls').value.trim();
+  const sex  = document.getElementById('af-sex').value;
+  const plot = parseFloat(document.getElementById('af-plot').value)||16;
+  stu[addTarget].push(mkStu(nom,cls,sex,plot,addWave));
+  document.getElementById('addOvl').classList.remove('vis');
+  render(addTarget);
+  notify('✓ '+nom+' ajouté·e (V'+addWave+')');
+}
+
+/* ════════════════ CHRONO ════════════════ */
+let ac=null;
+function ga(){if(!ac)ac=new(window.AudioContext||window.webkitAudioContext)();return ac;}
+function bip(f=880,d=.15,t='square',v=.4){try{const c=ga(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.type=t;o.frequency.value=f;g.gain.setValueAtTime(v,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+d);o.start();o.stop(c.currentTime+d);}catch(e){}}
+function triB(){[0,180,360].forEach((t,i)=>setTimeout(()=>bip(660+i*220,.2,'square',.4),t));}
+function fanf(){[523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>bip(f,.3,'square',.35),i*130));}
+function fmt(s){return`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;}
+
+function cUI(k){
+  const c=CH[k],pfx='ck-'+k+'-';
+  const tel=document.getElementById('ct-'+k);
+  const pel=document.getElementById('cp-'+k);
+  if(!tel||!pel) return;
+  tel.textContent=fmt(c.rem);
+  tel.className='ctime';
+  if(c.phase==='run'){
+    if(c.rem<=5)tel.classList.add('d');
+    else if(c.rem<=15)tel.classList.add('w');
+    pel.textContent=`▶ COURSE ${c.blk}/3`;
+    pel.className='cphase a';
+  } else if(c.phase==='rest'){
+    tel.classList.add('r');
+    pel.textContent=`⏸ REPOS · C${c.blk+1} dans ${fmt(c.rem)}`;
+    pel.className='cphase r';
+  } else {
+    pel.textContent=c.blk>=3?'✓ TERMINÉ':'PRÊT';
+    pel.className='cphase';
+  }
+  for(let i=0;i<3;i++){
+    const pip=document.getElementById(pfx+i);
+    if(!pip) continue;
+    pip.className='cblk';
+    if(c.phase==='run'&&i===c.blk-1)pip.classList.add('a');
+    else if(i<c.blk-(c.phase==='run'?1:0)||(c.phase==='idle'&&i<c.blk))pip.classList.add('d');
+  }
+}
+function cStart(k){
+  const c=CH[k];
+  if(c.paused){c.paused=false;document.getElementById('cgo-'+k).disabled=true;document.getElementById('cpause-'+k).textContent='⏸';document.getElementById('cpause-'+k).disabled=false;tick(k);return;}
+  c.blk=1;c.phase='run';c.rem=CFG[k].dur;c.paused=false;
+  document.getElementById('cgo-'+k).disabled=true;
+  document.getElementById('cpause-'+k).disabled=false;
+  document.getElementById('cstop-'+k).disabled=false;
+  cUI(k);tick(k);
+}
+function tick(k){
+  const c=CH[k];
+  if(c.iv) clearInterval(c.iv);
+  c.iv=setInterval(()=>{
+    if(c.paused) return;
+    c.rem--;
+    if(c.rem<=3&&c.rem>0&&c.phase==='run') bip(700,.08,'sine',.25);
+    if(c.rem<=0){
+      if(c.phase==='run'){
+        triB();
+        if(c.blk>=3){clearInterval(c.iv);c.phase='idle';c.rem=0;fanf();document.getElementById('cgo-'+k).disabled=true;document.getElementById('cpause-'+k).disabled=true;cUI(k);return;}
+        if(c.restOn){c.phase='rest';c.rem=CFG[k].rest;bip(440,.2,'triangle',.25);}
+        else{c.blk++;c.rem=CFG[k].dur;}
+      } else {c.blk++;c.phase='run';c.rem=CFG[k].dur;triB();}
+    }
+    cUI(k);
+  },1000);
+}
+function cPause(k){
+  const c=CH[k];c.paused=!c.paused;
+  const btn=document.getElementById('cpause-'+k);
+  btn.textContent=c.paused?'▶':'⏸';
+  document.getElementById('cgo-'+k).disabled=!c.paused;
+  document.getElementById('cgo-'+k).textContent=c.paused?'▶ Reprendre':'▶ Lancer';
+}
+function cStop(k){
+  const c=CH[k];
+  if(c.iv) clearInterval(c.iv);
+  c.phase='idle';c.blk=0;c.paused=false;c.rem=CFG[k].dur;
+  document.getElementById('cgo-'+k).disabled=false;
+  document.getElementById('cgo-'+k).textContent='▶ Lancer';
+  document.getElementById('cpause-'+k).disabled=true;
+  document.getElementById('cpause-'+k).textContent='⏸';
+  document.getElementById('cstop-'+k).disabled=true;
+  cUI(k);
+}
+function tglRest(k){
+  const c=CH[k];if(c.phase!=='idle') return;
+  c.restOn=!c.restOn;
+  document.getElementById('tgl-'+k).classList.toggle('on',c.restOn);
+}
+
+/* ════════════════ IMPORT ════════════════ */
+const dzEl=document.getElementById('dz');
+dzEl.addEventListener('dragover',e=>{e.preventDefault();dzEl.classList.add('over');});
+dzEl.addEventListener('dragleave',()=>dzEl.classList.remove('over'));
+dzEl.addEventListener('drop',e=>{e.preventDefault();dzEl.classList.remove('over');importXLSX(e.dataTransfer.files[0]);});
+
+function importXLSX(file){
+  if(!file) return;
+  const r=new FileReader();
+  r.onload=e=>{
+    wb=XLSX.read(e.target.result,{type:'binary'});
+    dzEl.querySelector('.dz-t').textContent='✓ '+file.name;
+    dzEl.querySelector('.dz-s').textContent='Chargé · cliquer pour changer';
+    dzEl.style.borderStyle='solid';dzEl.style.borderColor='var(--neon)';
+    buildSSel();
+    const fn=wb.SheetNames.find(n=>!n.toLowerCase().includes('résumé')&&!n.toLowerCase().includes('perf'))||wb.SheetNames[0];
+    loadSheet(fn);
+    document.getElementById('impArea').style.display='block';
+  };
+  r.readAsBinaryString(file);
+}
+function buildSSel(){
+  document.getElementById('ssRow').innerHTML=wb.SheetNames.map((n,i)=>
+    `<button class="ss-btn" data-i="${i}" onclick="loadSheet(wb.SheetNames[${i}])">${n}</button>`
+  ).join('');
+}
+/* ── Détection intelligente des colonnes ── */
+let colMap = {nom:null, cls:null, sex:null}; // detected column keys
+
+function findCol(keys, patterns){
+  // Exact match first
+  for(const p of patterns){ const k=keys.find(k=>k===p); if(k) return k; }
+  // Case-insensitive match
+  for(const p of patterns){ const k=keys.find(k=>k.toLowerCase()===p.toLowerCase()); if(k) return k; }
+  // Contains match
+  for(const p of patterns){ const k=keys.find(k=>k.toLowerCase().includes(p.toLowerCase())); if(k) return k; }
+  return null;
+}
+
+function detectColumns(rows){
+  if(!rows.length) return {nom:null,cls:null,sex:null};
+  const keys = Object.keys(rows[0]);
+
+  // --- NOM ---
+  let nomKey = findCol(keys,[
+    'NOM - Prénom','NOM Prénom','Nom Prénom','Prénom Nom','Nom complet',
+    'Élève','ELEVE','élève','Identifiant',
+    'NOM','Nom','nom','Name','name','Étudiant','ETUDIANT'
+  ]);
+  // If not found by header name, find the first column whose values look like "WORD Word" names
+  if(!nomKey){
+    for(const k of keys){
+      const vals = rows.slice(0,Math.min(5,rows.length)).map(r=>String(r[k]||'').trim()).filter(v=>v);
+      const namelike = vals.filter(v=>v.length>3 && /[A-ZÀ-Ÿ]/.test(v[0]) && /[a-zA-ZÀ-ÿ]/.test(v) && !/[@\.com]/.test(v));
+      if(namelike.length >= Math.min(3,vals.length)){ nomKey=k; break; }
+    }
+  }
+  // Ultimate fallback: first key
+  if(!nomKey) nomKey = keys[0];
+
+  // --- CLASSE ---
+  const clsKey = findCol(keys,[
+    'Classe','CLASSE','classe','Group','Groupe','GROUPE','GROUPE Classe','classe actuelle','Division'
+  ]);
+
+  // --- SEXE ---
+  const sexKey = findCol(keys,[
+    'Sexe G/F','Sexe','SEXE','sexe','G/F','Genre','genre','Sex'
+  ]);
+
+  return {nom:nomKey, cls:clsKey, sex:sexKey};
+}
+
+function loadSheet(name){
+  document.querySelectorAll('.ss-btn').forEach(b=>b.classList.remove('on'));
+  const idx=wb.SheetNames.indexOf(name);
+  if(idx>=0){const btn=document.querySelector(`.ss-btn[data-i="${idx}"]`);if(btn)btn.classList.add('on');}
+  const ws=wb.Sheets[name];
+  const raw=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+
+  // Find header row: first row with ≥2 non-empty cells
+  let hr=0;
+  for(let i=0;i<Math.min(raw.length,10);i++){
+    if(raw[i].filter(c=>String(c).trim()!=='').length>=2){hr=i;break;}
+  }
+  const hdrs=raw[hr].map((h,i)=>String(h||'').trim()||'_col'+(i+1));
+
+  // Data rows
+  const rows=[];
+  for(let i=hr+1;i<raw.length;i++){
+    const r=raw[i];
+    const hasContent=r.slice(0,10).some(v=>String(v).trim()!==''&&v!==null&&v!==undefined&&v!==false);
+    if(!hasContent) continue;
+    const obj={};
+    hdrs.forEach((h,j)=>obj[h]=r[j]??'');
+    rows.push(obj);
+  }
+  impRows=rows;
+
+  // Detect columns
+  colMap = detectColumns(rows);
+
+  // Count display
+  document.getElementById('impCnt').textContent=rows.length+' élève'+(rows.length!==1?'s':'');
+
+  // Show mapping badge
+  const mapInfo = document.getElementById('colMapInfo');
+  if(mapInfo){
+    const parts=[];
+    if(colMap.nom) parts.push(`<span style="color:var(--neon)">Nom → <b>${colMap.nom}</b></span>`);
+    if(colMap.cls) parts.push(`<span style="color:var(--w1)">Classe → <b>${colMap.cls}</b></span>`);
+    if(colMap.sex) parts.push(`<span style="color:#f472b6">Sexe → <b>${colMap.sex}</b></span>`);
+    if(!colMap.cls) parts.push(`<span style="color:var(--mt)">Classe : non détectée</span>`);
+    mapInfo.innerHTML = parts.join(' &nbsp;·&nbsp; ');
+    mapInfo.style.display='flex';
+  }
+
+  // Table display
+  const dc=hdrs.filter(h=>h&&!h.startsWith('_col')).slice(0,10);
+  document.getElementById('impHead').innerHTML=`<tr>${dc.map(h=>{
+    const isNom=h===colMap.nom, isCls=h===colMap.cls, isSex=h===colMap.sex;
+    const col=isNom?'var(--neon)':isCls?'var(--w1)':isSex?'#f472b6':'';
+    return `<th style="${col?'color:'+col+';border-bottom:2px solid '+col:''}">${h}${isNom?' 👤':isCls?' 🏫':isSex?' ⚥':''}</th>`;
+  }).join('')}</tr>`;
+  document.getElementById('impBody').innerHTML=rows.slice(0,60).map(r=>
+    `<tr>${dc.map(h=>`<td style="${h===colMap.nom?'color:var(--br);font-weight:600':''}">${r[h]!==undefined&&String(r[h]).trim()!==''&&r[h]!==false?r[h]:'—'}</td>`).join('')}</tr>`
+  ).join('');
+}
+
+function sendToTest(type){
+  if(!impRows.length){notify('⚠ Importez d\'abord un fichier Excel');goTab('import');return;}
+
+  // Re-detect in case sheet was reloaded
+  if(!colMap.nom) colMap = detectColumns(impRows);
+
+  const list = impRows.map(r=>{
+    // Name: use detected column, then try to combine prenom+nom if separate
+    let nom = colMap.nom ? String(r[colMap.nom]||'').trim() : '';
+
+    // If name is empty or looks like just a last name (no space), try combining nom+prénom columns
+    if(!nom || !nom.includes(' ')){
+      const keys = Object.keys(r);
+      const prenomKey = findCol(keys,['Prénom','prenom','PRÉNOM','FirstName','first_name','firstname']);
+      const nomKey2   = findCol(keys,['Nom de famille','Nom','NOM','LastName','last_name','lastname','name']);
+      if(prenomKey && nomKey2 && prenomKey !== colMap.nom){
+        const pren = String(r[prenomKey]||'').trim();
+        const n2   = String(r[nomKey2]||'').trim();
+        if(pren && n2) nom = n2+' '+pren;
+        else if(n2) nom = n2;
+      }
+    }
+
+    // Fallback: first non-empty string value that looks like a name
+    if(!nom){
+      for(const k of Object.keys(r)){
+        const v = String(r[k]||'').trim();
+        if(v.length>2 && /[A-ZÀ-Ÿa-zà-ÿ]/.test(v) && !/[@\d]/.test(v)){ nom=v; break; }
+      }
+    }
+
+    const cls = colMap.cls ? String(r[colMap.cls]||'').trim() : '';
+    const rawSex = colMap.sex ? String(r[colMap.sex]||'').toUpperCase().trim() : '';
+    const sex = (rawSex==='F'||rawSex==='FILLE'||rawSex==='FEMALE'||rawSex==='F.')?'F':'G';
+    const plot = type==='s'?16:15;
+
+    return {nom, cls, sex, plot};
+  }).filter(s=>{
+    const n=s.nom;
+    return n && n.length>1 && n!=='false' && n!=='0' && n!=='NaN' && !/^\d+$/.test(n) && !n.includes('@');
+  });
+
+  if(!list.length){
+    notify('⚠ Aucun nom détecté — vérifier la colonne « 👤 » dans le tableau');
+    // Scroll to import
+    document.getElementById('impArea').scrollIntoView({behavior:'smooth'});
+    return;
+  }
+  let added=0;
+  list.forEach(e=>{
+    if(!stu[type].find(s=>s.nom===e.nom&&s.cls===e.cls)){
+      stu[type].push(mkStu(e.nom,e.cls,e.sex,e.plot,1));
+      added++;
+    }
+  });
+  notify(`✓ ${added} élève${added!==1?'s':''} ajouté${added!==1?'s':''} → ${type==='s'?'2nde':'Terminale'}`);
+  goTab(type==='s'?'seconde':'terminale'); render(type);
+}
+function doImport(type){
+  if(!impRows.length){notify('⚠ Importez d\'abord un fichier Excel');goTab('import');return;}
+  sendToTest(type);
+}
+
+/* ════════════════ EXPORT & RESULTS ════════════════ */
+let resTab = 's';
+
+function switchRes(type){
+  resTab = type;
+  const s = document.getElementById('rt-s');
+  const t = document.getElementById('rt-t');
+  if(s) s.classList.toggle('on', type==='s');
+  if(t) t.classList.toggle('on', type==='t');
+  renderResults();
+}
+
+function renderResults(){
+  const cntEl   = document.getElementById('res-cnt');
+  const statsEl = document.getElementById('res-stats');
+  const headEl  = document.getElementById('res-head');
+  const bodyEl  = document.getElementById('res-body');
+  if(!cntEl||!statsEl||!headEl||!bodyEl) return;
+
+  const type = resTab, cfg = CFG[type];
+  const list = stu[type];
+  const active  = list.filter(s=>s.status==='normal');
+  const noted   = active.filter(s=>{ const c=calcStu(s,type); return c&&c.total!==null; });
+  const totals  = noted.map(s=>calcStu(s,type).total).filter(n=>n!==null);
+  const avg     = totals.length ? Math.round(totals.reduce((a,b)=>a+b,0)/totals.length*100)/100 : null;
+  const best    = totals.length ? Math.max(...totals) : null;
+
+  cntEl.textContent = list.length+' élève'+(list.length!==1?'s':'');
+  statsEl.innerHTML = `
+    <div class="stat-chip"><div class="stat-v" style="color:var(--br)">${list.length}</div><div class="stat-l">TOTAL</div></div>
+    <div class="stat-chip"><div class="stat-v" style="color:var(--neon)">${noted.length}</div><div class="stat-l">NOTÉS</div></div>
+    <div class="stat-chip"><div class="stat-v" style="color:#818cf8">${list.filter(s=>s.status==='absent').length}</div><div class="stat-l">ABSENTS</div></div>
+    <div class="stat-chip"><div class="stat-v" style="color:var(--w3)">${list.filter(s=>s.status==='dispense').length}</div><div class="stat-l">DISPENSÉS</div></div>
+    ${avg!==null?`<div class="stat-chip"><div class="stat-v" style="color:var(--neon)">${avg}</div><div class="stat-l">MOYENNE /20</div></div>`:''}
+    ${best!==null?`<div class="stat-chip"><div class="stat-v" style="color:var(--w2)">${best}</div><div class="stat-l">MAX /20</div></div>`:''}
+  `;
+  headEl.innerHTML = `<tr>
+    <th>#</th><th>Nom</th><th>Classe</th><th>S.</th><th>Vague</th><th>Statut</th>
+    <th>C1 (plot·zone)</th><th>C2</th><th>C3</th>
+    <th>AFL2°</th><th>AFL3°</th>
+    <th>Perf /${cfg.maxP}</th><th>Maît /${cfg.maxM}</th>
+    <th>AFL2 /${cfg.maxA2}</th><th>AFL3 /${cfg.maxA3}</th>
+    <th>TOTAL /20</th>
+  </tr>`;
+
+  const sorted = [...list].sort((a,b)=>{
+    if(a.status!=='normal'&&b.status==='normal') return 1;
+    if(a.status==='normal'&&b.status!=='normal') return -1;
+    if(a.wave!==b.wave) return a.wave-b.wave;
+    return a.nom.localeCompare(b.nom);
+  });
+  let n=1;
+  bodyEl.innerHTML = sorted.map(s=>{
+    const c = calcStu(s,type);
+    const statBadge = s.status==='absent'
+      ? '<span style="background:#3f1b22;color:#f87171;padding:1px 6px;border-radius:3px;font-size:9px">ABSENT</span>'
+      : s.status==='dispense'
+      ? '<span style="background:#3d2f0b;color:#fbbf24;padding:1px 6px;border-radius:3px;font-size:9px">DISPENSÉ</span>'
+      : '<span style="color:var(--neon);font-size:11px">✓</span>';
+    const wc = ['','var(--w1)','var(--w2)','var(--w3)','var(--w4)'][s.wave]||'var(--base)';
+    const num = s.status==='normal' ? n++ : '—';
+    const z = i => s.zones[i] ? s.plots[i]+'·'+s.zones[i] : '—';
+    return `<tr class="${s.status}">
+      <td style="color:var(--mt)">${num}</td>
+      <td style="color:var(--br);font-weight:600">${s.nom}</td>
+      <td>${s.cls||'—'}</td>
+      <td>${s.sexe}</td>
+      <td><span style="color:${wc};font-weight:700">V${s.wave}</span></td>
+      <td>${statBadge}</td>
+      <td>${z(0)}</td><td>${z(1)}</td><td>${z(2)}</td>
+      <td>${s.afl2?('['+( s.afl_split||'4/4' )+'] D'+s.afl2):'—'}</td><td>${s.afl3?'D'+s.afl3:'—'}</td>
+      <td style="color:var(--neon)">${c?.perf??'—'}</td>
+      <td style="color:#818cf8">${c?.mait??'—'}</td>
+      <td style="color:var(--vi)">${c?.afl2??'—'}</td>
+      <td style="color:var(--vi)">${c?.afl3??'—'}</td>
+      <td class="tot-cell">${c?.total??'—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function exportExcelType(type){
+  if(!stu[type]||!stu[type].length){notify('⚠ Aucun élève à exporter');return;}
+  const cfg = CFG[type];
+  const headers = ['Nom','Classe','Sexe','Vague','Statut','Plot C1','Zone C1','Plot C2','Zone C2','Plot C3','Zone C3','AFL2 dégré','AFL3 dégré','Perf /'+cfg.maxP,'Maîtrise /'+cfg.maxM,'AFL2 /'+cfg.maxA2,'AFL3 /'+cfg.maxA3,'Total /20','Distance (m)'];
+  const rows = stu[type].map(s=>{
+    const c = calcStu(s,type);
+    return [s.nom,s.cls,s.sexe,s.wave,s.status,s.plots[0],s.zones[0]||'',s.plots[1],s.zones[1]||'',s.plots[2],s.zones[2]||'',s.afl2||'',s.afl3||'',c?.perf??'',c?.mait??'',c?.afl2??'',c?.afl3??'',c?.total??'',c?.dist??''];
+  });
+  const ws = XLSX.utils.aoa_to_sheet([headers,...rows]);
+  ws['!cols'] = headers.map(()=>({wch:13}));
+  const ewb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(ewb, ws, type==='s'?'2nde':'Terminale');
+  XLSX.writeFile(ewb,'EPS_resultats_'+(type==='s'?'2nde':'terminale')+'.xlsx');
+  notify('✓ Excel téléchargé');
+}
+function exportExcel(){ exportExcelType(currentTab==='s'||currentTab==='t'?currentTab:resTab); }
+function exportExcelRes(){ exportExcelType(resTab); }
+
+function buildPrintHTML(type){
+  const cfg = CFG[type];
+  const sorted = [...stu[type]].sort((a,b)=>{
+    if(a.status!=='normal'&&b.status==='normal') return 1;
+    if(a.status==='normal'&&b.status!=='normal') return -1;
+    if(a.wave!==b.wave) return a.wave-b.wave;
+    return a.nom.localeCompare(b.nom);
+  });
+  const totals = sorted.filter(s=>s.status==='normal').map(s=>calcStu(s,type)?.total).filter(n=>n!=null);
+  const avg = totals.length ? (totals.reduce((a,b)=>a+b,0)/totals.length).toFixed(2) : '—';
+  let n=1;
+  const rows = sorted.map(s=>{
+    const c = calcStu(s,type);
+    const bg = s.status==='absent'?'background:#fff5f5':s.status==='dispense'?'background:#fffbeb':'';
+    const num = s.status==='normal' ? n++ : '';
+    const z = i => s.zones[i] ? s.plots[i]+'·'+s.zones[i] : '—';
+    const statTxt = s.status==='normal'?'Présent':s.status==='absent'?'ABSENT':'DISPENSÉ';
+    return `<tr style="${bg}"><td>${num}</td><td><b>${s.nom}</b></td><td>${s.cls}</td><td>${s.sexe}</td>
+      <td>V${s.wave}</td><td>${statTxt}</td>
+      <td>${z(0)}</td><td>${z(1)}</td><td>${z(2)}</td>
+      <td>${s.afl2||'—'}</td><td>${s.afl3||'—'}</td>
+      <td>${c?.perf??'—'}</td><td>${c?.mait??'—'}</td>
+      <td>${c?.afl2??'—'}</td><td>${c?.afl3??'—'}</td>
+      <td style="font-weight:bold;background:#e0fdf4">${c?.total??'—'}</td></tr>`;
+  }).join('');
+  return `<style>
+    *{box-sizing:border-box}body{font-family:Arial,sans-serif;font-size:10px;color:#000;margin:0;padding:8px}
+    h1{font-size:14px;margin:0 0 2px}h2{font-size:10px;color:#555;margin:0 0 8px}
+    .stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+    .sc{background:#f3f4f6;border-radius:3px;padding:3px 10px;font-size:9px}
+    .sc b{font-size:14px;display:block;color:#111}
+    table{width:100%;border-collapse:collapse}
+    th{background:#1e3048;color:#fff;padding:4px 6px;text-align:left;font-size:8px}
+    td{padding:4px 6px;border-bottom:1px solid #e5e7eb;font-size:9px}
+    tr:nth-child(even) td{background:#f9fafb}
+  </style>
+  <h1>EPS Demi-Fond — ${type==='s'?'2nde (3×3 min)':'Terminale (3×1min30)'}</h1>
+  <h2>${new Date().toLocaleDateString('fr-FR',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</h2>
+  <div class="stats">
+    <div class="sc"><b>${sorted.length}</b>Total</div>
+    <div class="sc"><b style="color:green">${sorted.filter(s=>s.status==='normal').length}</b>Présents</div>
+    <div class="sc"><b style="color:#dc2626">${sorted.filter(s=>s.status==='absent').length}</b>Absents</div>
+    <div class="sc"><b style="color:#d97706">${sorted.filter(s=>s.status==='dispense').length}</b>Dispensés</div>
+    <div class="sc"><b>${avg}</b>Moyenne /20</div>
+  </div>
+  <table><thead><tr>
+    <th>#</th><th>Nom</th><th>Classe</th><th>S.</th><th>V.</th><th>Statut</th>
+    <th>C1</th><th>C2</th><th>C3</th><th>AFL2°</th><th>AFL3°</th>
+    <th>Perf/${cfg.maxP}</th><th>Maît/${cfg.maxM}</th>
+    <th>AFL2/${cfg.maxA2}</th><th>AFL3/${cfg.maxA3}</th>
+    <th>Total/20</th>
+  </tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function exportPDFRes(){
+  const content = buildPrintHTML(resTab);
+  const type = resTab;
+  const title = 'EPS ' + (type==='s'?'2nde':'Terminale') + ' — Résultats';
+  // Build a self-contained print page in a new tab (never touches the main app)
+  const pageHtml = [
+    '<!DOCTYPE html><html lang="fr"><head>',
+    '<meta charset="UTF-8">',
+    '<title>' + title + '</title>',
+    '<style>',
+    '@page{size:A4 landscape;margin:10mm}',
+    '@media print{.no-print{display:none!important}}',
+    'body{margin:0;font-family:Arial,sans-serif}',
+    '.no-print{position:sticky;top:0;background:#1e3048;color:#fff;',
+    'padding:8px 16px;display:flex;align-items:center;gap:12px;z-index:99}',
+    '.no-print button{background:var(--n,#00f5a0);color:#000;border:none;',
+    'padding:7px 18px;border-radius:4px;cursor:pointer;font-weight:700;font-size:13px}',
+    '.no-print span{font-size:12px;opacity:.7}',
+    '</style>',
+    '</head><body>',
+    '<div class="no-print">',
+    '<button onclick="window.print()">🖨 Imprimer / Enregistrer en PDF</button>',
+    '<span>Fermer cet onglet après impression</span>',
+    '<button onclick="window.close()" style="background:#ff3366;color:#fff;margin-left:auto">✕ Fermer</button>',
+    '</div>',
+    content,
+    '</body></html>'
+  ].join('');
+
+  try {
+    const blob = new Blob([pageHtml], {type:'text/html;charset=utf-8'});
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.target = '_blank'; a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url), 60000);
+    notify("📄 Onglet d'impression ouvert");
+  } catch(e) {
+    // Fallback: download as HTML file
+    const blob = new Blob([pageHtml], {type:'text/html;charset=utf-8'});
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = 'EPS_resultats_' + type + '.html';
+    a.click();
+    setTimeout(()=>URL.revokeObjectURL(url), 5000);
+    notify("📥 Fichier téléchargé — ouvrir puis imprimer");
+  }
+}
+function exportPDF(){ exportPDFRes(); }
+
+
+
+/* ════════════════ BARÈME DISPLAY ════════════════ */
+function buildBaremes(){
+  // 2nde perf table
+  const levels2 = [{lbl:'TRÈS BONNE MAÎTRISE',from:0,to:7,cls:'tbm'},{lbl:'MAÎTRISE SATISFAISANTE',from:7,to:14,cls:'ms'},{lbl:'MAÎTRISE FRAGILE',from:14,to:21,cls:'mfr'},{lbl:'MAÎTRISE INSUFFISANTE',from:21,to:99,cls:'mi'}];
+  function getLvl(i,type){return levels2.find((l,li)=>i>=l.from&&i<l.to)||levels2[3];}
+  function perfRows(tbl,type){
+    return tbl.map(([d,n],i)=>{
+      const l=getLvl(i,type);const speed=(d/FACTOR[type]/3).toFixed(2);
+      return `<tr><td><span class="lvl-badge lvl-${l.cls}">${i===0||i===7||i===14||i===21?l.lbl:''}</span></td><td>${speed} km/h</td><td style="color:var(--neon);font-weight:700">${d} m</td><td style="color:var(--br);font-weight:700">${n}</td></tr>`;
+    }).join('');
+  }
+  document.getElementById('btbl-s-g').innerHTML=perfRows(REF.s.G,'s');
+  document.getElementById('btbl-s-f').innerHTML=perfRows(REF.s.F,'s');
+  document.getElementById('btbl-t-g').innerHTML=perfRows(REF.t.G,'t');
+  document.getElementById('btbl-t-f').innerHTML=perfRows(REF.t.F,'t');
+  // Zone pills
+  function zonePills(type){
+    return Object.entries(ZD[type]).map(([z,d])=>`
+      <div class="zone-pill z${d.cls}" style="border:2px solid transparent">
+        <span style="font-size:22px;font-weight:900">${z}</span>
+        <span style="font-size:12px;font-weight:700">${d.lbl}</span>
+        <span style="font-family:'Share Tech Mono',monospace;font-size:13px">${d.mait>0?'+':''}${d.mait} pt</span>
+        <span style="font-size:10px;opacity:.7">Δ ${d.dev>0?'+':''}${d.dev} km/h</span>
+      </div>`).join('');
+  }
+  document.getElementById('zpills-s').innerHTML=zonePills('s');
+  document.getElementById('zpills-t').innerHTML=zonePills('t');
+  // AFL cards
+  function aflCards(descs,scores,max,cid){
+    return descs.map((d,i)=>`
+      <div class="afl-card">
+        <div class="afl-card-deg">${i+1}</div>
+        <div class="afl-card-pts">${scores[i]} pt${scores[i]!==1?'s':''} / ${max}</div>
+        <div style="font-family:var(--disp);font-size:13px;font-weight:700;color:var(--br);margin-bottom:2px">${AFL2_D[i]}</div>
+        <div class="afl-card-txt">${d}</div>
+      </div>`).join('');
+  }
+  function aflCards3(descs,scores,max){
+    return descs.map((d,i)=>`
+      <div class="afl-card">
+        <div class="afl-card-deg">${i+1}</div>
+        <div class="afl-card-pts">${scores[i]} pt${scores[i]!==1?'s':''} / ${max}</div>
+        <div style="font-family:var(--disp);font-size:13px;font-weight:700;color:var(--br);margin-bottom:2px">${AFL3_D[i]}</div>
+        <div class="afl-card-txt">${d}</div>
+      </div>`).join('');
+  }
+  document.getElementById('afl2-s-cards').innerHTML=aflCards(AFL2_DESC,AFL_S.s.a2,4,'');
+  document.getElementById('afl3-s-cards').innerHTML=aflCards3(AFL3_DESC,AFL_S.s.a3,2);
+  document.getElementById('afl2-t-cards').innerHTML=aflCards(AFL2_DESC,AFL_S.t.a2,4,'');
+  document.getElementById('afl3-t-cards').innerHTML=aflCards3(AFL3_DESC,AFL_S.t.a3,4);
+}
+
+/* ════════════════ TAB NAV ════════════════ */
+let currentTab='import';
+function goTab(id){
+  currentTab=id;
+  const ids=['import','seconde','terminale','bar-s','bar-t','results'];
+  document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('on',ids[i]===id));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  document.getElementById('panel-'+id).classList.add('on');
+  document.getElementById('hdrExport').style.display='none';
+  if(id==='seconde'||id==='terminale') currentTab=id==='seconde'?'s':'t';
+  if(id==='results') renderResults();
+}
+
+function notify(msg){
+  const el=document.createElement('div');el.className='notif';el.textContent=msg;
+  document.body.appendChild(el);setTimeout(()=>el.remove(),2200);
+}
+
+
+/* ════════════════ PASSWORD ════════════════ */
+// Hash stored — original password is never in source code
+const PWD_HASH = 'e97b09f12bd03d842dac59d3d0f0b2a3d22d31d9dc5746a8180153844a050b51';
+
+async function hashStr(str){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+async function checkPwd(){
+  const val = document.getElementById('pwdInp').value;
+  const errEl = document.getElementById('pwdErr');
+  const boxEl = document.getElementById('pwdScreen');
+  const inpEl = document.getElementById('pwdInp');
+  if(!val){ errEl.textContent='Veuillez saisir un mot de passe.'; return; }
+  const h = await hashStr(val);
+  if(h === PWD_HASH){
+    boxEl.style.opacity='0';
+    boxEl.style.transition='opacity .4s ease';
+    setTimeout(()=>{ boxEl.style.display='none'; }, 400);
+  } else {
+    errEl.textContent='Mot de passe incorrect.';
+    inpEl.classList.remove('pwd-shake');
+    void inpEl.offsetWidth; // reflow
+    inpEl.classList.add('pwd-shake');
+    inpEl.value='';
+    setTimeout(()=>{errEl.textContent='';}, 2500);
+  }
+}
+
+
+/* ════════════════ THEME ════════════════ */
+function toggleTheme(){
+  const isLight = document.body.classList.toggle('light');
+  document.getElementById('themeBtn').textContent = isLight ? '🌙' : '☀️';
+  try{ localStorage.setItem('eps_theme', isLight?'light':'dark'); } catch(e){}
+}
+function initTheme(){
+  try{
+    const saved = localStorage.getItem('eps_theme');
+    if(saved === 'light'){
+      document.body.classList.add('light');
+      const btn = document.getElementById('themeBtn');
+      if(btn) btn.textContent = '🌙';
+    }
+  } catch(e){}
+}
+
+/* ════════════════ INIT ════════════════ */
+buildBaremes();
+cUI('s');cUI('t');
+render('s');render('t');
+initTheme();
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeZP();closeAdd();}});
+</script>
+
+<div id="printOvl" style="display:none"><div id="printContent"></div></div>
+
+<!-- RESULTS PANEL -->
+<div class="panel" id="panel-results">
+  <div class="res-wrap">
+    <div class="res-topbar">
+      <div class="res-toggle">
+        <button class="res-t on" id="rt-s" onclick="switchRes('s')">2nde</button>
+        <button class="res-t"    id="rt-t" onclick="switchRes('t')">Terminale</button>
+      </div>
+      <span id="res-cnt" class="cnt"></span>
+      <div style="margin-left:auto;display:flex;gap:6px">
+        <button class="exp-btn xl" onclick="exportExcelRes()">&#128202; Excel</button>
+        <button class="exp-btn pdf" onclick="exportPDFRes()">&#128424; PDF / Imprimer</button>
+      </div>
+    </div>
+    <div class="stat-row" id="res-stats"></div>
+    <div class="res-tbl-wrap">
+      <table class="res-tbl">
+        <thead id="res-head"></thead>
+        <tbody id="res-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
